@@ -1,0 +1,25 @@
+---
+import { projects } from "../data/projects";
+import ProjectCard from "./ProjectCard.astro";
+---
+
+<section class="grid" aria-label="Selected work">
+  {projects.map((p) => <ProjectCard project={p} />)}
+</section>
+
+<style>
+  .grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(3, 1fr);
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    margin-top: 40px;
+  }
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+</style>

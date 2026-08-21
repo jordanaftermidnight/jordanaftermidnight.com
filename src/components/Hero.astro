@@ -1,61 +1,104 @@
 ---
-// Hero — emblem + wordmark + oscilloscope band + identity + currently pills + links.
-// Signature: cursor proximity to emblem triggers cyan→gold crossfade + digital-glitch.
+import CircuitBackground from "./CircuitBackground.astro";
+
+// Asymmetric hero: left column = emblem + wordmark + oscilloscope + tagline;
+// right column = "Currently" pill rail + links. Circuit board is now the
+// hero backdrop (not a corner watermark). Only motion signatures kept:
+// oscilloscope + emblem proximity glitch.
 ---
 
 <section class="hero">
-  <a href="#top" class="emblem" aria-label="Jordanaftermidnight" id="hero-emblem">
-    <picture class="cyan">
-      <source srcset="/brand/icon-emblem-cyan.webp" type="image/webp" />
-      <img src="/brand/icon-emblem-cyan.png" alt="" width="128" height="128" />
-    </picture>
-    <picture class="gold">
-      <source srcset="/brand/icon-emblem-gold.webp" type="image/webp" />
-      <img src="/brand/icon-emblem-gold.png" alt="" width="128" height="128" />
-    </picture>
-  </a>
+  <CircuitBackground />
 
-  <h1 class="wordmark" id="hero-wordmark">Jordanaftermidnight</h1>
+  <div class="hero-inner">
+    <div class="left">
+      <div class="lockup">
+        <a href="#top" class="emblem" aria-label="Jordanaftermidnight" id="hero-emblem">
+          <picture class="cyan">
+            <source srcset="/brand/icon-emblem-cyan.webp" type="image/webp" />
+            <img src="/brand/icon-emblem-cyan.png" alt="" width="104" height="104" />
+          </picture>
+          <picture class="gold">
+            <source srcset="/brand/icon-emblem-gold.webp" type="image/webp" />
+            <img src="/brand/icon-emblem-gold.png" alt="" width="104" height="104" />
+          </picture>
+        </a>
+        <div class="mark">
+          <h1 class="wordmark">jordanaftermidnight</h1>
+          <canvas class="osc" id="hero-osc" width="660" height="24"></canvas>
+        </div>
+      </div>
+      <p class="identity">
+        Hacker, designer, musician by night. Compliance engineer by day.<br />
+        <span class="soft">Fluent in code. Not bound by it.</span>
+      </p>
+    </div>
 
-  <canvas class="osc" id="hero-osc" width="840" height="84"></canvas>
-
-  <p class="identity">
-    Hacker, designer, musician by night. Compliance engineer by day.<br>
-    <span class="soft">Fluent in code. Not bound by it.</span>
-  </p>
-
-  <div class="currently">
-    <span class="currently-label">Currently</span>
-    <ul class="pills">
-      <li><a class="pill" href="https://github.com/jordanaftermidnight/localmem" target="_blank" rel="noopener">localmem</a></li>
-      <li><a class="pill" href="https://github.com/jordanaftermidnight/IRIS_project" target="_blank" rel="noopener">IRIS</a></li>
-      <li><a class="pill" href="https://github.com/jordanaftermidnight/kyb-risk-tool" target="_blank" rel="noopener">KYB</a></li>
-      <li><a class="pill" href="https://github.com/jordanaftermidnight/driftfield" target="_blank" rel="noopener">DRIFTFIELD</a></li>
-    </ul>
+    <aside class="right">
+      <div class="currently">
+        <span class="currently-label">&gt; Currently</span>
+        <ul class="pills">
+          <li><a class="pill" href="https://github.com/jordanaftermidnight/localmem" target="_blank" rel="noopener">localmem</a></li>
+          <li><a class="pill" href="https://github.com/jordanaftermidnight/IRIS_project" target="_blank" rel="noopener">IRIS</a></li>
+          <li><a class="pill" href="https://github.com/jordanaftermidnight/kyb-risk-tool" target="_blank" rel="noopener">KYB</a></li>
+        </ul>
+      </div>
+      <ul class="links">
+        <li><a href="https://github.com/jordanaftermidnight" target="_blank" rel="noopener">github ↗</a></li>
+        <li><a href="mailto:contact@jordanaftermidnight.com">contact ↗</a></li>
+      </ul>
+    </aside>
   </div>
-
-  <ul class="links">
-    <li><a href="https://github.com/jordanaftermidnight" target="_blank" rel="noopener">github</a></li>
-    <li><a href="mailto:contact@jordanaftermidnight.com">contact</a></li>
-  </ul>
 </section>
 
 <style>
   .hero {
-    padding-block: clamp(2.5rem, 6vw, 4.5rem);
-    text-align: center;
     position: relative;
-    z-index: 2;
+    overflow: hidden;
+    border-bottom: 1px solid var(--line);
+    /* Contain the absolute-positioned CircuitBackground */
+    isolation: isolate;
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    gap: 40px;
+    align-items: start;
+    padding: 48px 0;
+  }
+  @media (max-width: 720px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 28px;
+      padding: 36px 0;
+    }
   }
 
+  /* ─── left column ────────────────────────────────────────────────── */
+  .left { display: flex; flex-direction: column; gap: 20px; }
+  .lockup {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    min-width: 0; /* let the wordmark shrink instead of overflowing */
+  }
+  @media (max-width: 720px) {
+    .lockup {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 14px;
+    }
+  }
   .emblem {
-    width: 128px; height: 128px;
-    margin: 0 auto 2rem;
+    width: 104px; height: 104px;
     position: relative;
     display: inline-block;
     line-height: 0;
-    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--cyan) 25%, transparent));
-    animation: fade-up 800ms ease both;
+    flex-shrink: 0;
+    /* The ONLY glow on the page — everything else gets border/color changes */
+    filter: drop-shadow(0 0 18px color-mix(in oklab, var(--cyan) 30%, transparent));
   }
   .emblem picture,
   .emblem picture img {
@@ -74,15 +117,14 @@
   .emblem.is-hot picture.cyan { opacity: 0; }
   .emblem:hover,
   .emblem.is-hot {
-    filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+    filter: drop-shadow(0 0 24px color-mix(in oklab, var(--gold-hot) 50%, transparent));
   }
 
-  /* Digital-tear glitch — 450ms with clip-path banding + RGB split. Fires
-     each time .is-hot is (re)added; JS forces reflow to replay. */
+  /* Digital-tear glitch — kept as the signature motion for the emblem */
   .emblem.is-hot { animation: emblem-glitch 450ms steps(6, end); }
   @keyframes emblem-glitch {
     0%   { transform: translate(0, 0) scale(1);
-           filter: drop-shadow(0 0 20px rgba(0,212,255,0.5)); clip-path: none; }
+           filter: drop-shadow(0 0 18px rgba(0,212,255,0.5)); clip-path: none; }
     12%  { transform: translate(-6px, 3px) scale(1.03);
            filter: drop-shadow(6px 0 0 #ff2540) drop-shadow(-6px 0 0 #00e4ff) hue-rotate(90deg) contrast(1.4);
            clip-path: inset(0 0 62% 0); }
@@ -96,42 +138,59 @@
            filter: drop-shadow(-2px 0 0 #ff2540) drop-shadow(2px 0 0 #00e4ff); clip-path: none; }
     62%  { transform: translate(-1px, 1px); filter: hue-rotate(30deg) brightness(1.15); }
     100% { transform: translate(0, 0) scale(1);
-           filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+           filter: drop-shadow(0 0 18px color-mix(in oklab, var(--gold-hot) 50%, transparent));
            clip-path: none; }
   }
 
+  .mark { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .wordmark {
-    font-family: var(--font-sans);
-    font-weight: 500;
-    font-size: clamp(2.2rem, 5vw, 3.2rem);
-    letter-spacing: -0.02em;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    /* Fluid: comfortably big on desktop, still readable on 320px */
+    font-size: clamp(22px, 5.5vw, 33px);
+    line-height: 1.1;
+    letter-spacing: -0.015em;
     color: var(--paper);
-    text-shadow: 0 0 30px color-mix(in oklab, var(--cyan) 15%, transparent);
+    word-break: break-word;
+    /* No text-shadow — the emblem carries the glow, wordmark stays clean */
   }
-
   .osc {
     display: block;
-    margin: 1rem auto 1.5rem;
-    width: min(420px, 80%);
-    height: 42px;
+    width: 100%;
+    max-width: 420px;
+    height: 26px;
   }
 
   .identity {
-    font-size: clamp(1.05rem, 2vw, 1.2rem);
-    color: var(--paper);
-    animation: fade-up 800ms 200ms ease both;
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--body);
+    max-width: 460px;
   }
   .identity .soft {
-    color: var(--dust);
+    color: var(--muted);
     font-style: italic;
-    font-weight: 400;
+  }
+
+  /* ─── right column ───────────────────────────────────────────────── */
+  .right {
+    display: flex; flex-direction: column;
+    align-items: flex-end;
+    gap: 20px;
+    padding-top: 6px;
+  }
+  @media (max-width: 720px) {
+    .right { align-items: flex-start; }
   }
 
   .currently {
-    margin-top: 2.25rem;
-    display: flex; align-items: center; justify-content: center;
-    gap: 0.75rem; flex-wrap: wrap;
-    animation: fade-up 800ms 300ms ease both;
+    display: flex; flex-direction: column;
+    align-items: flex-end;
+    gap: 10px;
+  }
+  @media (max-width: 720px) {
+    .currently { align-items: flex-start; }
   }
   .currently-label {
     font-family: var(--font-mono);
@@ -139,85 +198,52 @@
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--cyan);
-    opacity: 0.65;
-  }
-  .currently-label::before {
-    content: ">";
-    color: var(--cyan);
-    margin-right: 0.4em;
-    animation: caret 1.2s steps(1) infinite;
+    opacity: 0.75;
   }
   .pills {
-    display: flex; gap: 0.5rem; flex-wrap: wrap; list-style: none;
-    justify-content: center;
+    display: flex; flex-direction: column;
+    gap: 8px; list-style: none;
+    align-items: flex-end;
+  }
+  @media (max-width: 720px) {
+    .pills { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
   }
   .pill {
     display: inline-block;
-    padding: 0.35rem 0.7rem;
-    border: 1px solid var(--line);
+    padding: 6px 12px;
+    border: 1px solid var(--pill-line);
     border-radius: 3px;
-    font-size: 12.5px;
+    font-size: 12px;
     font-family: var(--font-mono);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
     color: var(--paper);
-    background: color-mix(in oklab, var(--surface) 70%, transparent);
-    transition: border-color 220ms ease, color 220ms ease,
-                box-shadow 220ms ease, transform 220ms ease, background 220ms ease;
-    opacity: 0; transform: translateY(4px);
-    animation: pill-in 500ms ease forwards;
+    background: rgba(18, 18, 31, 0.7);
+    transition: border-color 220ms ease, color 220ms ease;
   }
-  .pills li:nth-child(1) .pill { animation-delay: 400ms; }
-  .pills li:nth-child(2) .pill { animation-delay: 480ms; }
-  .pills li:nth-child(3) .pill { animation-delay: 560ms; }
-  .pills li:nth-child(4) .pill { animation-delay: 640ms; }
   .pill:hover {
     border-color: var(--gold-hot);
     color: var(--gold-hot);
-    background: color-mix(in oklab, var(--gold) 12%, var(--surface));
-    box-shadow:
-      0 0 22px color-mix(in oklab, var(--gold) 50%, transparent),
-      inset 0 0 12px color-mix(in oklab, var(--gold) 18%, transparent);
-    transform: translateY(-1px) scale(1.02);
   }
 
   .links {
-    margin-top: 2.25rem;
-    display: flex; justify-content: center; gap: 1.25rem;
-    flex-wrap: wrap; list-style: none;
-    animation: fade-up 800ms 700ms ease both;
+    display: flex; flex-direction: column;
+    gap: 6px; list-style: none;
+    align-items: flex-end;
+  }
+  @media (max-width: 720px) {
+    .links { align-items: flex-start; flex-direction: row; gap: 16px; }
   }
   .links a {
     font-family: var(--font-mono);
-    font-size: 13px;
+    font-size: 12px;
     color: var(--dust);
-    padding-block: 0.25rem;
-    border-bottom: 1px solid transparent;
-    transition: color 220ms ease, border-color 220ms ease, text-shadow 220ms ease;
+    transition: color 220ms ease;
   }
-  .links a:hover {
-    color: var(--gold-hot);
-    border-color: var(--gold-hot);
-    text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 55%, transparent);
-  }
-
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes pill-in { to { opacity: 1; transform: translateY(0); } }
-  @keyframes caret { 50% { opacity: 0; } }
+  .links a:hover { color: var(--gold-hot); }
 </style>
 
 <script>
-  import { scramble } from "../scripts/scramble";
-
-  // ── wordmark scramble on load, once ──
-  const wm = document.getElementById("hero-wordmark");
-  if (wm && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    scramble(wm as HTMLElement, wm.textContent || "", 900);
-  }
-
-  // ── oscilloscope band with tapered edges + mouse-x frequency ──
+  // ── oscilloscope band, tapered edges, mouse-x frequency ──
   (function osc() {
     const c = document.getElementById("hero-osc") as HTMLCanvasElement | null;
     if (!c) return;
@@ -249,34 +275,19 @@
 
       const grad = ctx.createLinearGradient(0, 0, w, 0);
       grad.addColorStop(0.00, "rgba(0, 212, 255, 0)");
-      grad.addColorStop(0.10, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(0.10, "rgba(0, 212, 255, 0.2)");
       grad.addColorStop(0.30, "rgba(0, 212, 255, 0.75)");
-      grad.addColorStop(0.50, "rgba(0, 212, 255, 0.75)");
       grad.addColorStop(0.70, "rgba(0, 212, 255, 0.75)");
-      grad.addColorStop(0.90, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(0.90, "rgba(0, 212, 255, 0.2)");
       grad.addColorStop(1.00, "rgba(0, 212, 255, 0)");
 
       const cy = h / 2;
-      const amp = h * 0.28;
+      const amp = h * 0.32;
       const freq1 = 2 + mouseX * 2;
       const t = now * 0.001;
 
-      ctx.save();
-      ctx.filter = "blur(4px)";
       ctx.strokeStyle = grad;
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      for (let x = 0; x <= w; x += 2) {
-        const p = x / w;
-        const y = cy + Math.sin(p * Math.PI * 2 * freq1 + t) * amp
-                     + Math.sin(p * Math.PI * 2 * (freq1 * 0.4) + t * 0.7) * amp * 0.25;
-        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-      ctx.restore();
-
-      ctx.strokeStyle = grad;
-      ctx.lineWidth = 1.2;
+      ctx.lineWidth = 1.1;
       ctx.beginPath();
       for (let x = 0; x <= w; x += 2) {
         const p = x / w;
@@ -291,13 +302,13 @@
     if (reduce) draw(0); else requestAnimationFrame(draw);
   })();
 
-  // ── emblem proximity + glitch ──
+  // ── emblem proximity + glitch (the one signature motion) ──
   (function proximity() {
     const emblem = document.getElementById("hero-emblem");
     if (!emblem) return;
     if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const RADIUS = 260;
+    const RADIUS = 220;
     let hot = false;
     document.addEventListener("mousemove", (e) => {
       const r = emblem.getBoundingClientRect();

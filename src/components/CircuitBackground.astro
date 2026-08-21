@@ -1,36 +1,35 @@
 ---
-// Procedurally-generated PCB in inline SVG, anchored top-right.
-// Vector = infinite resolution; fades toward center via CSS radial mask.
+// Procedurally-generated PCB backdrop scoped to the hero band.
+// Vector = infinite resolution; fades left-to-right so the copy on the left
+// stays legible while the traces feel like they extend beyond the frame.
 ---
 
 <svg class="circuit-bg" id="circuit" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
 
 <style>
   .circuit-bg {
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: min(62vw, 900px);
-    aspect-ratio: 4 / 3;
+    /* Absolute inside the .hero container (not fixed to viewport) —
+       the circuit board IS the hero background, not a corner watermark. */
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
     z-index: 0;
     color: var(--cyan);
-    opacity: 0.45;
-    mask-image: radial-gradient(ellipse 100% 100% at top right,
-      black 0%,
-      black 25%,
-      rgba(0,0,0,0.55) 55%,
-      transparent 85%);
-    -webkit-mask-image: radial-gradient(ellipse 100% 100% at top right,
-      black 0%,
-      black 25%,
-      rgba(0,0,0,0.55) 55%,
-      transparent 85%);
-    animation: circuit-fade-in 1600ms 400ms ease both;
-  }
-  @keyframes circuit-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 0.45; }
+    opacity: 0.55;
+    /* Fade left→right so the left column (emblem + wordmark + copy) reads
+       cleanly while the right side dissolves into the traces. */
+    mask-image: linear-gradient(90deg,
+      rgba(0,0,0,0.35) 0%,
+      rgba(0,0,0,0.65) 35%,
+      black 65%,
+      black 100%);
+    -webkit-mask-image: linear-gradient(90deg,
+      rgba(0,0,0,0.35) 0%,
+      rgba(0,0,0,0.65) 35%,
+      black 65%,
+      black 100%);
   }
 </style>
 
@@ -41,9 +40,9 @@
     const svg = document.getElementById("circuit");
     if (!svg) return;
 
-    const VB_W = 800, VB_H = 600, GRID = 20;
+    const VB_W = 1200, VB_H = 400, GRID = 20;
     svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
-    svg.setAttribute("preserveAspectRatio", "xMaxYMin slice");
+    svg.setAttribute("preserveAspectRatio", "xMidYMid slice");
 
     let seed = 137;
     const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
@@ -84,80 +83,6 @@
       return pins;
     }
 
-    function trace(startX: number, startY: number, initialDir: string, maxSteps = 4, thickness = 1) {
-      let x = startX, y = startY, dir = initialDir;
-      const d = [`M ${x} ${y}`];
-      const steps = rint(2, maxSteps);
-      for (let i = 0; i < steps; i++) {
-        const dist = rint(2, 5) * GRID;
-        if (dir === "right") x = Math.min(VB_W - 6, x + dist);
-        else if (dir === "left") x = Math.max(6, x - dist);
-        else if (dir === "up")   y = Math.max(6, y - dist);
-        else if (dir === "down") y = Math.min(VB_H - 6, y + dist);
-        d.push(`L ${x} ${y}`);
-        if (chance(0.6)) {
-          if (dir === "right" || dir === "left") dir = chance(0.5) ? "up" : "down";
-          else dir = chance(0.5) ? "left" : "right";
-        }
-      }
-      mk("path", {
-        d: d.join(" "), fill: "none", stroke: "currentColor",
-        "stroke-width": thickness, "stroke-linecap": "round",
-        opacity: 0.35 + rnd() * 0.25,
-      });
-      if (chance(0.55)) {
-        mk("circle", { cx: x, cy: y, r: 2.2, fill: "currentColor", opacity: 0.7 });
-        mk("circle", { cx: x, cy: y, r: 1.1, fill: "var(--ink)", opacity: 1 });
-      }
-    }
-
-    function smd(cx: number, cy: number) {
-      const orient = chance(0.5) ? "h" : "v";
-      const x = cx * GRID, y = cy * GRID;
-      const w = orient === "h" ? 10 : 5;
-      const h = orient === "h" ? 5 : 10;
-      mk("rect", { x, y, width: w, height: h,
-                   fill: "none", stroke: "currentColor", "stroke-width": 0.7, opacity: 0.5 });
-    }
-
-    function elcap(cx: number, cy: number, r = 6) {
-      const x = cx * GRID, y = cy * GRID;
-      mk("circle", { cx: x, cy: y, r, fill: "none", stroke: "currentColor",
-                     "stroke-width": 0.9, opacity: 0.55 });
-      mk("path", {
-        d: `M ${x - r + 1} ${y} A ${r - 1} ${r - 1} 0 0 1 ${x - 1} ${y - r + 1}`,
-        stroke: "currentColor", "stroke-width": 0.9, fill: "none", opacity: 0.55,
-      });
-    }
-
-    function diode(cx: number, cy: number) {
-      const x = cx * GRID, y = cy * GRID;
-      const s = 6;
-      mk("path", { d: `M ${x} ${y - s/2} L ${x} ${y + s/2} L ${x + s} ${y} Z`,
-                   fill: "currentColor", opacity: 0.55 });
-      mk("line", { x1: x + s, y1: y - s/2, x2: x + s, y2: y + s/2,
-                   stroke: "currentColor", "stroke-width": 1.1, opacity: 0.65 });
-    }
-
-    function inductor(cx: number, cy: number) {
-      const x = cx * GRID, y = cy * GRID;
-      let d = `M ${x} ${y}`;
-      for (let i = 0; i < 4; i++) d += ` a 3 3 0 0 1 6 0`;
-      mk("path", { d, fill: "none", stroke: "currentColor",
-                   "stroke-width": 0.9, opacity: 0.55, "stroke-linecap": "round" });
-    }
-
-    function resistor(cx: number, cy: number) {
-      const x = cx * GRID, y = cy * GRID;
-      mk("rect", { x, y: y - 2.5, width: 14, height: 5,
-                   fill: "none", stroke: "currentColor",
-                   "stroke-width": 0.8, opacity: 0.55, rx: 0.5 });
-      mk("line", { x1: x - 3, y1: y, x2: x, y2: y,
-                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
-      mk("line", { x1: x + 14, y1: y, x2: x + 17, y2: y,
-                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
-    }
-
     function qfn(cx: number, cy: number, w: number, h: number, label: string) {
       const x = cx * GRID, y = cy * GRID, pw = w * GRID, ph = h * GRID;
       mk("rect", { x, y, width: pw, height: ph, rx: 3, ry: 3,
@@ -190,17 +115,77 @@
       return pins.filter((_, i) => i % 2 === 0);
     }
 
-    // Compose the scene
+    function trace(startX: number, startY: number, initialDir: string, maxSteps = 4, thickness = 1) {
+      let x = startX, y = startY, dir = initialDir;
+      const d = [`M ${x} ${y}`];
+      const steps = rint(2, maxSteps);
+      for (let i = 0; i < steps; i++) {
+        const dist = rint(2, 5) * GRID;
+        if (dir === "right") x = Math.min(VB_W - 6, x + dist);
+        else if (dir === "left") x = Math.max(6, x - dist);
+        else if (dir === "up")   y = Math.max(6, y - dist);
+        else if (dir === "down") y = Math.min(VB_H - 6, y + dist);
+        d.push(`L ${x} ${y}`);
+        if (chance(0.6)) {
+          if (dir === "right" || dir === "left") dir = chance(0.5) ? "up" : "down";
+          else dir = chance(0.5) ? "left" : "right";
+        }
+      }
+      mk("path", {
+        d: d.join(" "), fill: "none", stroke: "currentColor",
+        "stroke-width": thickness, "stroke-linecap": "round",
+        opacity: 0.28 + rnd() * 0.24,
+      });
+      if (chance(0.5)) {
+        mk("circle", { cx: x, cy: y, r: 2.2, fill: "currentColor", opacity: 0.6 });
+        mk("circle", { cx: x, cy: y, r: 1.1, fill: "var(--ink)", opacity: 1 });
+      }
+    }
+
+    function smd(cx: number, cy: number) {
+      const orient = chance(0.5) ? "h" : "v";
+      const x = cx * GRID, y = cy * GRID;
+      const w = orient === "h" ? 10 : 5;
+      const h = orient === "h" ? 5 : 10;
+      mk("rect", { x, y, width: w, height: h,
+                   fill: "none", stroke: "currentColor", "stroke-width": 0.7, opacity: 0.45 });
+    }
+
+    function elcap(cx: number, cy: number, r = 6) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("circle", { cx: x, cy: y, r, fill: "none", stroke: "currentColor",
+                     "stroke-width": 0.9, opacity: 0.5 });
+      mk("path", {
+        d: `M ${x - r + 1} ${y} A ${r - 1} ${r - 1} 0 0 1 ${x - 1} ${y - r + 1}`,
+        stroke: "currentColor", "stroke-width": 0.9, fill: "none", opacity: 0.5,
+      });
+    }
+
+    function resistor(cx: number, cy: number) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("rect", { x, y: y - 2.5, width: 14, height: 5,
+                   fill: "none", stroke: "currentColor",
+                   "stroke-width": 0.8, opacity: 0.5, rx: 0.5 });
+      mk("line", { x1: x - 3, y1: y, x2: x, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.5 });
+      mk("line", { x1: x + 14, y1: y, x2: x + 17, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.5 });
+    }
+
+    // ── Scene: spread the chips across the whole hero, not the corner ──
     const chipRects: { cx: number; cy: number; w: number; h: number }[] = [];
     const track = (cx: number, cy: number, w: number, h: number) =>
       chipRects.push({ cx, cy, w, h });
 
-    const p0 = qfn(32, 2, 7, 6, "MCU");    track(32, 2, 7, 6);
-    const p1 = chip(22, 3,  6, 4, "U1");   track(22, 3, 6, 4);
-    const p2 = chip(26, 10, 4, 3, "U2");   track(26, 10, 4, 3);
-    const p3 = chip(19, 17, 5, 2, "U3");   track(19, 17, 5, 2);
+    // Big anchor chip in the right portion
+    const p0 = qfn(44, 4, 7, 6, "MCU");   track(44, 4, 7, 6);
+    // Smaller ICs scattered
+    const p1 = chip(34, 3,  6, 4, "U1");  track(34, 3, 6, 4);
+    const p2 = chip(38, 11, 4, 3, "U2");  track(38, 11, 4, 3);
+    const p3 = chip(28, 12, 5, 2, "U3");  track(28, 12, 5, 2);
+    const p4 = chip(52, 12, 4, 3, "U4");  track(52, 12, 4, 3);
 
-    [...p0, ...p1, ...p2, ...p3].forEach((p) => {
+    [...p0, ...p1, ...p2, ...p3, ...p4].forEach((p) => {
       if (!chance(0.55)) return;
       const dir = p.side === "left" ? "left"
                 : p.side === "right" ? "right"
@@ -208,48 +193,39 @@
       trace(p.x, p.y, dir, 5, chance(0.18) ? 1.4 : 1);
     });
 
-    for (let i = 0; i < 5; i++) {
-      const startX = rint(20, 38) * GRID;
-      const startY = rint(2, 6) * GRID;
-      trace(startX, startY, chance(0.5) ? "left" : "down", 9, 1.5);
+    // Long bus traces across the board — power/ground rails
+    for (let i = 0; i < 8; i++) {
+      const startX = rint(25, 55) * GRID;
+      const startY = rint(2, 15) * GRID;
+      trace(startX, startY, chance(0.5) ? "left" : "down", 10, 1.4);
     }
 
     const inside = (c: number, r: number) => chipRects.some((k) =>
       c >= k.cx - 1 && c <= k.cx + k.w + 1 &&
       r >= k.cy - 1 && r <= k.cy + k.h + 1);
 
-    for (let i = 0; i < 6; i++) {
-      const col = rint(16, 38), row = rint(2, 25);
+    for (let i = 0; i < 8; i++) {
+      const col = rint(20, 58), row = rint(2, 17);
       if (inside(col, row)) continue;
       elcap(col, row, rint(4, 7));
     }
-    for (let i = 0; i < 10; i++) {
-      const col = rint(16, 36), row = rint(2, 26);
+    for (let i = 0; i < 14; i++) {
+      const col = rint(20, 55), row = rint(2, 18);
       if (inside(col, row)) continue;
       resistor(col, row);
     }
-    for (let i = 0; i < 6; i++) {
-      const col = rint(17, 37), row = rint(2, 26);
-      if (inside(col, row)) continue;
-      diode(col, row);
-    }
-    for (let i = 0; i < 3; i++) {
-      const col = rint(17, 34), row = rint(4, 24);
-      if (inside(col, row)) continue;
-      inductor(col, row);
-    }
-    for (let i = 0; i < 24; i++) {
-      const col = rint(16, 39), row = rint(1, 27);
+    for (let i = 0; i < 30; i++) {
+      const col = rint(18, 58), row = rint(1, 19);
       if (inside(col, row)) continue;
       smd(col, row);
     }
-    for (let i = 0; i < 28; i++) {
-      const col = rint(15, 39), row = rint(2, 27);
+    for (let i = 0; i < 34; i++) {
+      const col = rint(18, 58), row = rint(2, 19);
       if (inside(col, row)) continue;
       mk("circle", {
         cx: col * GRID, cy: row * GRID,
         r: chance(0.5) ? 1.4 : 2.2,
-        fill: "currentColor", opacity: 0.35 + rnd() * 0.3,
+        fill: "currentColor", opacity: 0.28 + rnd() * 0.3,
       });
     }
   })();

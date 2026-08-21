@@ -1,33 +1,45 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap');
 @import "tailwindcss";
 
-/* ─── design tokens ─────────────────────────────────────────────────── */
+/* ─── design tokens ─────────────────────────────────────────────────
+   Palette policy: one identity color (cyan) at rest, one interaction
+   color (gold) on hover. Nothing else. The neutrals do the rest.       */
 @theme {
-  --color-ink:         #08080F;
-  --color-ink-2:       #0F0F1A;
-  --color-surface:     #12121F;
-  --color-line:        #26263B;
-  --color-neon-cyan:   #00D4FF;
-  --color-cyan-dim:    #0A5C6E;
-  --color-brand-gold:  #C19A6B;
-  --color-gold-hot:    #E3C089;
-  --color-paper:       #E4E8F0;
-  --color-dust:        #6A7280;
-  --font-sans: 'Instrument Sans', system-ui, -apple-system, sans-serif;
+  --color-ink:        #08080F;
+  --color-ink-2:      #0B0E17;
+  --color-panel:      #0D1019;
+  --color-line:       #1c2230;
+  --color-line-cyan:  #24455a;
+  --color-pill-line:  #26263B;
+  --color-pin-cyan:   #24455a;
+  --color-neon-cyan:  #00D4FF;
+  --color-cyan-soft:  #5f8fa3;
+  --color-brand-gold: #C19A6B;
+  --color-gold-hot:   #E3C089;
+  --color-paper:      #E6E9F0;
+  --color-body:       #9aa1b4;
+  --color-muted:      #8b92a5;
+  --color-dust:       #6d7484;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, Menlo, monospace;
 }
 
 :root {
-  --ink:       #08080F;
-  --ink-2:     #0F0F1A;
-  --surface:   #12121F;
-  --line:      #26263B;
-  --cyan:      #00D4FF;
-  --cyan-dim:  #0A5C6E;
-  --gold:      #C19A6B;
-  --gold-hot:  #E3C089;
-  --paper:     #E4E8F0;
-  --dust:      #6A7280;
+  --ink:        #08080F;
+  --ink-2:      #0B0E17;
+  --panel:      #0D1019;
+  --line:       #1c2230;
+  --line-cyan:  #24455a;
+  --pill-line:  #26263B;
+  --pin-cyan:   #24455a;
+  --cyan:       #00D4FF;
+  --cyan-soft:  #5f8fa3;
+  --gold:       #C19A6B;
+  --gold-hot:   #E3C089;
+  --paper:      #E6E9F0;
+  --body:       #9aa1b4;
+  --muted:      #8b92a5;
+  --dust:       #6d7484;
   color-scheme: dark;
 }
 
@@ -38,7 +50,7 @@ body {
   background: var(--ink);
   color: var(--paper);
   font-family: var(--font-sans);
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -48,37 +60,14 @@ body {
 a { color: inherit; text-decoration: none; }
 img, picture, svg { display: block; max-width: 100%; height: auto; }
 
-/* ─── scrollbar ─────────────────────────────────────────────────────── */
+/* ─── scrollbar — cyan, restrained ──────────────────────────────────── */
 ::-webkit-scrollbar { width: 8px; }
 ::-webkit-scrollbar-track { background: var(--ink); }
-::-webkit-scrollbar-thumb { background: var(--cyan); border-radius: 4px; opacity: 0.3; }
-::-webkit-scrollbar-thumb:hover { opacity: 0.6; }
-
-/* ─── brand-swap: cyan → gold on hover / .is-hot ───────────────────── */
-.brand-swap {
-  position: relative;
-  display: inline-block;
-  line-height: 0;
+::-webkit-scrollbar-thumb {
+  background: var(--pill-line);
+  border-radius: 4px;
 }
-.brand-swap > img {
-  display: block;
-  transition: opacity 350ms ease;
-}
-.brand-swap > img.is-gold {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-}
-.brand-swap:hover > img.is-gold,
-.brand-swap.is-hot > img.is-gold,
-.brand-lockup:hover .brand-swap > img.is-gold {
-  opacity: 1;
-}
-.brand-swap:hover > img.is-cyan,
-.brand-swap.is-hot > img.is-cyan,
-.brand-lockup:hover .brand-swap > img.is-cyan {
-  opacity: 0;
-}
+::-webkit-scrollbar-thumb:hover { background: var(--line-cyan); }
 
 /* ─── reduced-motion ────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {

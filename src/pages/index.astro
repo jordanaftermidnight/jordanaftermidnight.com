@@ -1,56 +1,27 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import Hero from "../components/Hero.astro";
-import ProjectSection from "../components/ProjectSection.astro";
+import ProjectGrid from "../components/ProjectGrid.astro";
 import Footer from "../components/Footer.astro";
 ---
 
 <Layout>
   <main id="top">
     <Hero />
-    <div class="stack">
-      <ProjectSection
-        id="software"
-        title="Software"
-        meta="open source · javascript / python"
-        category="software"
-      />
-      <ProjectSection
-        id="compliance"
-        title="Compliance"
-        meta="KYB / KYC · risk workflows"
-        category="compliance"
-      />
-      <ProjectSection
-        id="hardware"
-        title="Hardware"
-        meta="eurorack · arduino · docs"
-        category="hardware"
-      />
-      <ProjectSection
-        id="music"
-        title="Music"
-        meta="modular · signal design"
-        category="music"
-      />
-      <ProjectSection
-        id="research"
-        title="Research"
-        meta="ai · experimentation"
-        category="research"
-      />
-    </div>
+    <ProjectGrid />
   </main>
   <Footer />
 </Layout>
 
 <style>
   main {
-    max-width: 54rem;
+    max-width: 1080px;
     margin: 0 auto;
-    padding: 3rem 1.5rem 4rem;
+    padding: 24px 40px 32px;
     position: relative;
-    z-index: 2;
+    z-index: 1;
   }
-  .stack > * + * { margin-top: 0; } /* section handles its own top spacing */
+  @media (max-width: 720px) {
+    main { padding: 16px 20px 24px; }
+  }
 </style>

@@ -1,6 +1,8 @@
 ---
 import "../styles/global.css";
-import CircuitBackground from "../components/CircuitBackground.astro";
+// CircuitBackground is now embedded inside Hero.astro (scoped to the hero
+// band), not mounted globally. Sub-pages that don't want the backdrop
+// simply don't include Hero.
 
 interface Props {
   title?: string;
@@ -46,7 +48,6 @@ const canonical = SITE_ORIGIN + Astro.url.pathname;
     <title>{title}</title>
   </head>
   <body>
-    <CircuitBackground />
     <slot />
   </body>
 </html>

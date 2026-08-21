@@ -3,27 +3,18 @@ import type { Project } from "../data/projects";
 
 interface Props { project: Project; }
 const { project } = Astro.props;
-
-// Rough color mapping per common language / category — swap for real GitHub
-// colors later if we wire up live data.
-const dotColor = {
-  hardware:  "#c19a6b",  // gold — physical modules
-  software:  "#00d4ff",  // cyan — code
-  music:     "#8b5cf6",  // violet — releases
-  research:  "#dea584",  // rust — papers/experiments
-  compliance:"#00d4ff",  // treat as software category for now
-}[project.category] ?? "#00d4ff";
 ---
 
 <a class="project" href={project.repo} target="_blank" rel="noopener">
+  <div class="pin-header" aria-hidden="true"></div>
   <div class="project-head">
-    <span class="project-name">{project.name}</span>
-    <span class="lang-dot" style={`--lang: ${dotColor}`}></span>
-    <span class="lang-name">{project.category}</span>
+    <span class="designator">{project.designator}</span>
+    <span class="category">{project.category}</span>
   </div>
+  <span class="project-name">{project.name}</span>
   <p class="project-desc">{project.description}</p>
-  <div class="project-meta">
-    {project.tags.slice(0, 3).map((tag, i) => (
+  <div class="project-tags">
+    {project.tags.map((tag, i) => (
       <>{i > 0 && <span class="dot">·</span>}<span>{tag}</span></>
     ))}
   </div>
@@ -31,75 +22,77 @@ const dotColor = {
 
 <style>
   .project {
-    display: flex; flex-direction: column;
-    padding: 1.25rem 1.25rem 1rem;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-    transition: border-color 220ms ease, transform 220ms ease,
-                box-shadow 220ms ease, background 220ms ease;
     position: relative;
+    display: flex; flex-direction: column;
+    padding: 22px 20px 16px;
+    background: #0D1019;
+    border: 1px solid var(--line);
+    /* square corners — this is a "component," not a rounded pill */
+    border-radius: 0;
+    transition: border-color 220ms ease;
   }
   .project:hover {
     border-color: var(--gold-hot);
-    box-shadow: 0 0 22px color-mix(in oklab, var(--gold) 35%, transparent);
-    transform: translateY(-2px);
-    background: color-mix(in oklab, var(--surface) 88%, var(--gold) 6%);
+    /* no glow, no translate, no scale — the border change is the whole hover */
   }
-  .project::after {
-    content: "→";
-    position: absolute; top: 1rem; right: 1rem;
-    color: var(--line);
-    font-size: 14px;
-    transition: color 220ms ease, transform 220ms ease;
+
+  /* pin header — dashed IC-package strip at top of every card */
+  .pin-header {
+    position: absolute;
+    top: 0; left: 18px; right: 18px;
+    height: 5px;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--pin-cyan) 0 3px,
+      transparent 3px 13px
+    );
+    opacity: 0.85;
   }
-  .project:hover::after {
-    color: var(--gold-hot);
-    transform: translateX(3px);
-  }
+
   .project-head {
-    display: flex; align-items: center; gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 10px;
   }
+  .designator {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--gold);
+  }
+  .category {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    color: var(--cyan-soft);
+    text-transform: lowercase;
+  }
+
   .project-name {
     font-family: var(--font-sans);
     font-weight: 600;
-    font-size: 1rem;
-    letter-spacing: 0.02em;
+    font-size: 15.5px;
+    letter-spacing: -0.005em;
     color: var(--paper);
-    transition: color 220ms ease, text-shadow 220ms ease;
+    transition: color 220ms ease;
   }
-  .project:hover .project-name {
-    color: var(--gold-hot);
-    text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 55%, transparent);
-  }
-  .lang-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--lang, var(--cyan));
-    margin-left: auto;
-    box-shadow: 0 0 6px var(--lang, var(--cyan));
-  }
-  .lang-name {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--dust);
-    letter-spacing: 0.05em;
-    text-transform: lowercase;
-  }
+  .project:hover .project-name { color: var(--gold-hot); }
+
   .project-desc {
-    color: var(--paper);
-    opacity: 0.7;
-    font-size: 14px;
-    line-height: 1.5;
-    margin-bottom: 1rem;
+    color: var(--body);
+    font-size: 13px;
+    line-height: 1.55;
+    margin-top: 6px;
+    margin-bottom: 14px;
     flex: 1;
+    min-height: 38px;
   }
-  .project-meta {
-    display: flex; gap: 0.6rem; align-items: center;
+
+  .project-tags {
+    display: flex; gap: 6px; align-items: center;
     font-family: var(--font-mono);
-    font-size: 11px;
+    font-size: 10.5px;
     color: var(--dust);
-    letter-spacing: 0.03em;
+    letter-spacing: 0.02em;
   }
-  .project-meta .dot { opacity: 0.5; }
+  .project-tags .dot { opacity: 0.5; }
 </style>
