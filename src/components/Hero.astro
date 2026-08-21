@@ -68,7 +68,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     align-items: start;
     padding: 48px 0;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .hero-inner {
       grid-template-columns: 1fr;
       gap: 28px;
@@ -84,7 +84,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     gap: 22px;
     min-width: 0; /* let the wordmark shrink instead of overflowing */
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .lockup {
       flex-direction: column;
       align-items: flex-start;
@@ -146,8 +146,8 @@ import CircuitBackground from "./CircuitBackground.astro";
   .wordmark {
     font-family: var(--font-mono);
     font-weight: 700;
-    /* Fluid: comfortably big on desktop, still readable on 320px */
-    font-size: clamp(22px, 5.5vw, 33px);
+    /* Fluid: comfortably big on desktop, still readable on 320px viewports */
+    font-size: clamp(24px, 4.5vw, 33px);
     line-height: 1.1;
     letter-spacing: -0.015em;
     color: var(--paper);
@@ -163,10 +163,11 @@ import CircuitBackground from "./CircuitBackground.astro";
 
   .identity {
     font-family: var(--font-sans);
-    font-size: 15px;
+    /* Fluid so the first sentence stays on one line at any typical width */
+    font-size: clamp(13px, 1.6vw, 15px);
     line-height: 1.6;
     color: var(--body);
-    max-width: 460px;
+    /* No max-width — let the sentence take its natural width */
   }
   .identity .soft {
     color: var(--muted);
@@ -180,7 +181,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     gap: 20px;
     padding-top: 6px;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .right { align-items: flex-start; }
   }
 
@@ -189,7 +190,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     align-items: flex-end;
     gap: 10px;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .currently { align-items: flex-start; }
   }
   .currently-label {
@@ -205,7 +206,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     gap: 8px; list-style: none;
     align-items: flex-end;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .pills { flex-direction: row; flex-wrap: wrap; align-items: flex-start; }
   }
   .pill {
@@ -230,7 +231,7 @@ import CircuitBackground from "./CircuitBackground.astro";
     gap: 6px; list-style: none;
     align-items: flex-end;
   }
-  @media (max-width: 720px) {
+  @media (max-width: 900px) {
     .links { align-items: flex-start; flex-direction: row; gap: 16px; }
   }
   .links a {
