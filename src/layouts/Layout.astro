@@ -11,6 +11,13 @@ const {
   title = "Jordanaftermidnight — eurorack synths, AI + compliance tools, music",
   description = "Interdisciplinary maker: eurorack modules, AI + compliance software, music, research.",
 } = Astro.props;
+
+// Apex is the canonical domain. Vercel is configured to 308-redirect
+// www.jordanaftermidnight.com → jordanaftermidnight.com, so this link tag
+// tells search engines the definitive URL regardless of which one they
+// followed to get here.
+const SITE_ORIGIN = "https://jordanaftermidnight.com";
+const canonical = SITE_ORIGIN + Astro.url.pathname;
 ---
 
 <!doctype html>
@@ -22,14 +29,15 @@ const {
     <meta name="description" content={description} />
     <meta name="theme-color" content="#08080F" />
 
+    <link rel="canonical" href={canonical} />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://jordanaftermidnight.com/" />
-    <meta property="og:image" content="/apple-touch-icon.png" />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={SITE_ORIGIN + "/apple-touch-icon.png"} />
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content={title} />
