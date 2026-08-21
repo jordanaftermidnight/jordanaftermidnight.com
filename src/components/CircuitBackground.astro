@@ -1,0 +1,256 @@
+---
+// Procedurally-generated PCB in inline SVG, anchored top-right.
+// Vector = infinite resolution; fades toward center via CSS radial mask.
+---
+
+<svg class="circuit-bg" id="circuit" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+
+<style>
+  .circuit-bg {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(62vw, 900px);
+    aspect-ratio: 4 / 3;
+    pointer-events: none;
+    z-index: 0;
+    color: var(--cyan);
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse 100% 100% at top right,
+      black 0%,
+      black 25%,
+      rgba(0,0,0,0.55) 55%,
+      transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse 100% 100% at top right,
+      black 0%,
+      black 25%,
+      rgba(0,0,0,0.55) 55%,
+      transparent 85%);
+    animation: circuit-fade-in 1600ms 400ms ease both;
+  }
+  @keyframes circuit-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 0.45; }
+  }
+</style>
+
+<script>
+  // Draw a plausible PCB into the inline SVG. Deterministic (seeded) so the
+  // same layout renders every visit — feels intentional rather than random.
+  (function circuitboard() {
+    const svg = document.getElementById("circuit");
+    if (!svg) return;
+
+    const VB_W = 800, VB_H = 600, GRID = 20;
+    svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
+    svg.setAttribute("preserveAspectRatio", "xMaxYMin slice");
+
+    let seed = 137;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const rint = (a: number, b: number) => Math.floor(rnd() * (b - a + 1)) + a;
+    const chance = (p: number) => rnd() < p;
+
+    const NS = "http://www.w3.org/2000/svg";
+    const mk = (tag: string, attrs: Record<string, string | number>, text?: string) => {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, String(attrs[k]));
+      if (text != null) e.textContent = text;
+      svg.appendChild(e);
+      return e;
+    };
+
+    function chip(cx: number, cy: number, w: number, h: number, label: string) {
+      const x = cx * GRID, y = cy * GRID, pw = w * GRID, ph = h * GRID;
+      mk("rect", { x, y, width: pw, height: ph, rx: 1.5, ry: 1.5,
+                   fill: "none", stroke: "currentColor", "stroke-width": 1.2, opacity: 0.75 });
+      mk("circle", { cx: x + 5, cy: y + 5, r: 1.8, fill: "currentColor", opacity: 0.75 });
+      mk("text", {
+        x: x + pw / 2, y: y + ph / 2 + 3,
+        "text-anchor": "middle",
+        "font-family": "Space Mono, ui-monospace, monospace",
+        "font-size": 7, fill: "currentColor", opacity: 0.55,
+        "letter-spacing": "0.05em",
+      }, label);
+      const pins: { x: number; y: number; side: string }[] = [];
+      for (let i = 1; i < w; i++) {
+        pins.push({ x: (cx + i) * GRID, y, side: "top" });
+        pins.push({ x: (cx + i) * GRID, y: y + ph, side: "bottom" });
+      }
+      for (let i = 1; i < h; i++) {
+        pins.push({ x, y: (cy + i) * GRID, side: "left" });
+        pins.push({ x: x + pw, y: (cy + i) * GRID, side: "right" });
+      }
+      pins.forEach((p) => mk("circle", { cx: p.x, cy: p.y, r: 1.4, fill: "currentColor", opacity: 0.55 }));
+      return pins;
+    }
+
+    function trace(startX: number, startY: number, initialDir: string, maxSteps = 4, thickness = 1) {
+      let x = startX, y = startY, dir = initialDir;
+      const d = [`M ${x} ${y}`];
+      const steps = rint(2, maxSteps);
+      for (let i = 0; i < steps; i++) {
+        const dist = rint(2, 5) * GRID;
+        if (dir === "right") x = Math.min(VB_W - 6, x + dist);
+        else if (dir === "left") x = Math.max(6, x - dist);
+        else if (dir === "up")   y = Math.max(6, y - dist);
+        else if (dir === "down") y = Math.min(VB_H - 6, y + dist);
+        d.push(`L ${x} ${y}`);
+        if (chance(0.6)) {
+          if (dir === "right" || dir === "left") dir = chance(0.5) ? "up" : "down";
+          else dir = chance(0.5) ? "left" : "right";
+        }
+      }
+      mk("path", {
+        d: d.join(" "), fill: "none", stroke: "currentColor",
+        "stroke-width": thickness, "stroke-linecap": "round",
+        opacity: 0.35 + rnd() * 0.25,
+      });
+      if (chance(0.55)) {
+        mk("circle", { cx: x, cy: y, r: 2.2, fill: "currentColor", opacity: 0.7 });
+        mk("circle", { cx: x, cy: y, r: 1.1, fill: "var(--ink)", opacity: 1 });
+      }
+    }
+
+    function smd(cx: number, cy: number) {
+      const orient = chance(0.5) ? "h" : "v";
+      const x = cx * GRID, y = cy * GRID;
+      const w = orient === "h" ? 10 : 5;
+      const h = orient === "h" ? 5 : 10;
+      mk("rect", { x, y, width: w, height: h,
+                   fill: "none", stroke: "currentColor", "stroke-width": 0.7, opacity: 0.5 });
+    }
+
+    function elcap(cx: number, cy: number, r = 6) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("circle", { cx: x, cy: y, r, fill: "none", stroke: "currentColor",
+                     "stroke-width": 0.9, opacity: 0.55 });
+      mk("path", {
+        d: `M ${x - r + 1} ${y} A ${r - 1} ${r - 1} 0 0 1 ${x - 1} ${y - r + 1}`,
+        stroke: "currentColor", "stroke-width": 0.9, fill: "none", opacity: 0.55,
+      });
+    }
+
+    function diode(cx: number, cy: number) {
+      const x = cx * GRID, y = cy * GRID;
+      const s = 6;
+      mk("path", { d: `M ${x} ${y - s/2} L ${x} ${y + s/2} L ${x + s} ${y} Z`,
+                   fill: "currentColor", opacity: 0.55 });
+      mk("line", { x1: x + s, y1: y - s/2, x2: x + s, y2: y + s/2,
+                   stroke: "currentColor", "stroke-width": 1.1, opacity: 0.65 });
+    }
+
+    function inductor(cx: number, cy: number) {
+      const x = cx * GRID, y = cy * GRID;
+      let d = `M ${x} ${y}`;
+      for (let i = 0; i < 4; i++) d += ` a 3 3 0 0 1 6 0`;
+      mk("path", { d, fill: "none", stroke: "currentColor",
+                   "stroke-width": 0.9, opacity: 0.55, "stroke-linecap": "round" });
+    }
+
+    function resistor(cx: number, cy: number) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("rect", { x, y: y - 2.5, width: 14, height: 5,
+                   fill: "none", stroke: "currentColor",
+                   "stroke-width": 0.8, opacity: 0.55, rx: 0.5 });
+      mk("line", { x1: x - 3, y1: y, x2: x, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
+      mk("line", { x1: x + 14, y1: y, x2: x + 17, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
+    }
+
+    function qfn(cx: number, cy: number, w: number, h: number, label: string) {
+      const x = cx * GRID, y = cy * GRID, pw = w * GRID, ph = h * GRID;
+      mk("rect", { x, y, width: pw, height: ph, rx: 3, ry: 3,
+                   fill: "none", stroke: "currentColor", "stroke-width": 1.4, opacity: 0.8 });
+      mk("rect", { x: x + 5, y: y + 5, width: pw - 10, height: ph - 10, rx: 1,
+                   fill: "none", stroke: "currentColor", "stroke-width": 0.6, opacity: 0.4 });
+      mk("circle", { cx: x + 4, cy: y + 4, r: 1.8, fill: "currentColor", opacity: 0.85 });
+      mk("text", { x: x + pw / 2, y: y + ph / 2 + 3, "text-anchor": "middle",
+                   "font-family": "Space Mono, ui-monospace, monospace",
+                   "font-size": 8, fill: "currentColor", opacity: 0.65,
+                   "letter-spacing": "0.05em" }, label);
+      const pins: { x: number; y: number; side: string }[] = [];
+      const step = 4;
+      for (let px = x + step; px < x + pw; px += step) {
+        pins.push({ x: px, y, side: "top" });
+        pins.push({ x: px, y: y + ph, side: "bottom" });
+      }
+      for (let py = y + step; py < y + ph; py += step) {
+        pins.push({ x, y: py, side: "left" });
+        pins.push({ x: x + pw, y: py, side: "right" });
+      }
+      pins.forEach((p) => {
+        mk("line", {
+          x1: p.side === "left" || p.side === "right" ? p.x + (p.side === "left" ? -3 : 3) : p.x,
+          y1: p.side === "top" || p.side === "bottom" ? p.y + (p.side === "top" ? -3 : 3) : p.y,
+          x2: p.x, y2: p.y,
+          stroke: "currentColor", "stroke-width": 0.8, opacity: 0.5,
+        });
+      });
+      return pins.filter((_, i) => i % 2 === 0);
+    }
+
+    // Compose the scene
+    const chipRects: { cx: number; cy: number; w: number; h: number }[] = [];
+    const track = (cx: number, cy: number, w: number, h: number) =>
+      chipRects.push({ cx, cy, w, h });
+
+    const p0 = qfn(32, 2, 7, 6, "MCU");    track(32, 2, 7, 6);
+    const p1 = chip(22, 3,  6, 4, "U1");   track(22, 3, 6, 4);
+    const p2 = chip(26, 10, 4, 3, "U2");   track(26, 10, 4, 3);
+    const p3 = chip(19, 17, 5, 2, "U3");   track(19, 17, 5, 2);
+
+    [...p0, ...p1, ...p2, ...p3].forEach((p) => {
+      if (!chance(0.55)) return;
+      const dir = p.side === "left" ? "left"
+                : p.side === "right" ? "right"
+                : p.side === "top" ? "up" : "down";
+      trace(p.x, p.y, dir, 5, chance(0.18) ? 1.4 : 1);
+    });
+
+    for (let i = 0; i < 5; i++) {
+      const startX = rint(20, 38) * GRID;
+      const startY = rint(2, 6) * GRID;
+      trace(startX, startY, chance(0.5) ? "left" : "down", 9, 1.5);
+    }
+
+    const inside = (c: number, r: number) => chipRects.some((k) =>
+      c >= k.cx - 1 && c <= k.cx + k.w + 1 &&
+      r >= k.cy - 1 && r <= k.cy + k.h + 1);
+
+    for (let i = 0; i < 6; i++) {
+      const col = rint(16, 38), row = rint(2, 25);
+      if (inside(col, row)) continue;
+      elcap(col, row, rint(4, 7));
+    }
+    for (let i = 0; i < 10; i++) {
+      const col = rint(16, 36), row = rint(2, 26);
+      if (inside(col, row)) continue;
+      resistor(col, row);
+    }
+    for (let i = 0; i < 6; i++) {
+      const col = rint(17, 37), row = rint(2, 26);
+      if (inside(col, row)) continue;
+      diode(col, row);
+    }
+    for (let i = 0; i < 3; i++) {
+      const col = rint(17, 34), row = rint(4, 24);
+      if (inside(col, row)) continue;
+      inductor(col, row);
+    }
+    for (let i = 0; i < 24; i++) {
+      const col = rint(16, 39), row = rint(1, 27);
+      if (inside(col, row)) continue;
+      smd(col, row);
+    }
+    for (let i = 0; i < 28; i++) {
+      const col = rint(15, 39), row = rint(2, 27);
+      if (inside(col, row)) continue;
+      mk("circle", {
+        cx: col * GRID, cy: row * GRID,
+        r: chance(0.5) ? 1.4 : 2.2,
+        fill: "currentColor", opacity: 0.35 + rnd() * 0.3,
+      });
+    }
+  })();
+</script>

@@ -1,0 +1,318 @@
+---
+// Hero — emblem + wordmark + oscilloscope band + identity + currently pills + links.
+// Signature: cursor proximity to emblem triggers cyan→gold crossfade + digital-glitch.
+---
+
+<section class="hero">
+  <a href="#top" class="emblem" aria-label="Jordanaftermidnight" id="hero-emblem">
+    <picture class="cyan">
+      <source srcset="/brand/icon-emblem-cyan.webp" type="image/webp" />
+      <img src="/brand/icon-emblem-cyan.png" alt="" width="128" height="128" />
+    </picture>
+    <picture class="gold">
+      <source srcset="/brand/icon-emblem-gold.webp" type="image/webp" />
+      <img src="/brand/icon-emblem-gold.png" alt="" width="128" height="128" />
+    </picture>
+  </a>
+
+  <h1 class="wordmark" id="hero-wordmark">Jordanaftermidnight</h1>
+
+  <canvas class="osc" id="hero-osc" width="840" height="84"></canvas>
+
+  <p class="identity">
+    I build eurorack synths, AI + compliance tools, and music.<br>
+    <span class="soft">Research emerges in the seams.</span>
+  </p>
+
+  <div class="currently">
+    <span class="currently-label">Currently</span>
+    <ul class="pills">
+      <li><a class="pill" href="https://github.com/jordanaftermidnight/localmem" target="_blank" rel="noopener">localmem</a></li>
+      <li><a class="pill" href="https://github.com/jordanaftermidnight/IRIS_project" target="_blank" rel="noopener">IRIS</a></li>
+      <li><a class="pill" href="https://github.com/jordanaftermidnight/kyb-risk-tool" target="_blank" rel="noopener">KYB</a></li>
+      <li><a class="pill" href="https://github.com/jordanaftermidnight/driftfield" target="_blank" rel="noopener">DRIFTFIELD</a></li>
+    </ul>
+  </div>
+
+  <ul class="links">
+    <li><a href="https://github.com/jordanaftermidnight" target="_blank" rel="noopener">github</a></li>
+    <li><a href="mailto:contact@jordanaftermidnight.com">contact</a></li>
+  </ul>
+</section>
+
+<style>
+  .hero {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+    text-align: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .emblem {
+    width: 128px; height: 128px;
+    margin: 0 auto 2rem;
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--cyan) 25%, transparent));
+    animation: fade-up 800ms ease both;
+  }
+  .emblem picture,
+  .emblem picture img {
+    display: block;
+    width: 100%; height: 100%;
+    mix-blend-mode: screen;
+    transition: opacity 400ms ease;
+  }
+  .emblem picture.gold {
+    position: absolute; inset: 0;
+    opacity: 0;
+  }
+  .emblem:hover picture.gold,
+  .emblem.is-hot picture.gold { opacity: 1; }
+  .emblem:hover picture.cyan,
+  .emblem.is-hot picture.cyan { opacity: 0; }
+  .emblem:hover,
+  .emblem.is-hot {
+    filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+  }
+
+  /* Digital-tear glitch — 450ms with clip-path banding + RGB split. Fires
+     each time .is-hot is (re)added; JS forces reflow to replay. */
+  .emblem.is-hot { animation: emblem-glitch 450ms steps(6, end); }
+  @keyframes emblem-glitch {
+    0%   { transform: translate(0, 0) scale(1);
+           filter: drop-shadow(0 0 20px rgba(0,212,255,0.5)); clip-path: none; }
+    12%  { transform: translate(-6px, 3px) scale(1.03);
+           filter: drop-shadow(6px 0 0 #ff2540) drop-shadow(-6px 0 0 #00e4ff) hue-rotate(90deg) contrast(1.4);
+           clip-path: inset(0 0 62% 0); }
+    22%  { transform: translate(7px, -2px) scale(0.97);
+           filter: drop-shadow(-5px 0 0 #ff2540) drop-shadow(5px 0 0 #00e4ff) hue-rotate(-60deg);
+           clip-path: inset(58% 0 0 0); }
+    35%  { transform: translate(-3px, 2px) scale(1.02);
+           filter: drop-shadow(3px 0 0 #ff2540) drop-shadow(-3px 0 0 #00e4ff) hue-rotate(150deg) blur(0.6px) brightness(1.4);
+           clip-path: inset(28% 0 42% 0); }
+    48%  { transform: translate(4px, 0) scale(1);
+           filter: drop-shadow(-2px 0 0 #ff2540) drop-shadow(2px 0 0 #00e4ff); clip-path: none; }
+    62%  { transform: translate(-1px, 1px); filter: hue-rotate(30deg) brightness(1.15); }
+    100% { transform: translate(0, 0) scale(1);
+           filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+           clip-path: none; }
+  }
+
+  .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    text-shadow: 0 0 30px color-mix(in oklab, var(--cyan) 15%, transparent);
+  }
+
+  .osc {
+    display: block;
+    margin: 1rem auto 1.5rem;
+    width: min(420px, 80%);
+    height: 42px;
+  }
+
+  .identity {
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    color: var(--paper);
+    animation: fade-up 800ms 200ms ease both;
+  }
+  .identity .soft {
+    color: var(--dust);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .currently {
+    margin-top: 2.25rem;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap;
+    animation: fade-up 800ms 300ms ease both;
+  }
+  .currently-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    opacity: 0.65;
+  }
+  .currently-label::before {
+    content: ">";
+    color: var(--cyan);
+    margin-right: 0.4em;
+    animation: caret 1.2s steps(1) infinite;
+  }
+  .pills {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; list-style: none;
+    justify-content: center;
+  }
+  .pill {
+    display: inline-block;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+    color: var(--paper);
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+    transition: border-color 220ms ease, color 220ms ease,
+                box-shadow 220ms ease, transform 220ms ease, background 220ms ease;
+    opacity: 0; transform: translateY(4px);
+    animation: pill-in 500ms ease forwards;
+  }
+  .pills li:nth-child(1) .pill { animation-delay: 400ms; }
+  .pills li:nth-child(2) .pill { animation-delay: 480ms; }
+  .pills li:nth-child(3) .pill { animation-delay: 560ms; }
+  .pills li:nth-child(4) .pill { animation-delay: 640ms; }
+  .pill:hover {
+    border-color: var(--gold-hot);
+    color: var(--gold-hot);
+    background: color-mix(in oklab, var(--gold) 12%, var(--surface));
+    box-shadow:
+      0 0 22px color-mix(in oklab, var(--gold) 50%, transparent),
+      inset 0 0 12px color-mix(in oklab, var(--gold) 18%, transparent);
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  .links {
+    margin-top: 2.25rem;
+    display: flex; justify-content: center; gap: 1.25rem;
+    flex-wrap: wrap; list-style: none;
+    animation: fade-up 800ms 700ms ease both;
+  }
+  .links a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--dust);
+    padding-block: 0.25rem;
+    border-bottom: 1px solid transparent;
+    transition: color 220ms ease, border-color 220ms ease, text-shadow 220ms ease;
+  }
+  .links a:hover {
+    color: var(--gold-hot);
+    border-color: var(--gold-hot);
+    text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 55%, transparent);
+  }
+
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pill-in { to { opacity: 1; transform: translateY(0); } }
+  @keyframes caret { 50% { opacity: 0; } }
+</style>
+
+<script>
+  import { scramble } from "../scripts/scramble";
+
+  // ── wordmark scramble on load, once ──
+  const wm = document.getElementById("hero-wordmark");
+  if (wm && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    scramble(wm as HTMLElement, wm.textContent || "", 900);
+  }
+
+  // ── oscilloscope band with tapered edges + mouse-x frequency ──
+  (function osc() {
+    const c = document.getElementById("hero-osc") as HTMLCanvasElement | null;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function fit() {
+      if (!c || !ctx) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const box = c.getBoundingClientRect();
+      c.width = box.width * dpr;
+      c.height = box.height * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+
+    let mouseX = 0.5;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX / window.innerWidth;
+    });
+
+    function draw(now: number) {
+      if (!c || !ctx) return;
+      const w = c.getBoundingClientRect().width;
+      const h = c.getBoundingClientRect().height;
+      ctx.clearRect(0, 0, w, h);
+
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0.00, "rgba(0, 212, 255, 0)");
+      grad.addColorStop(0.10, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(0.30, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.50, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.70, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.90, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(1.00, "rgba(0, 212, 255, 0)");
+
+      const cy = h / 2;
+      const amp = h * 0.28;
+      const freq1 = 2 + mouseX * 2;
+      const t = now * 0.001;
+
+      ctx.save();
+      ctx.filter = "blur(4px)";
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const p = x / w;
+        const y = cy + Math.sin(p * Math.PI * 2 * freq1 + t) * amp
+                     + Math.sin(p * Math.PI * 2 * (freq1 * 0.4) + t * 0.7) * amp * 0.25;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const p = x / w;
+        const y = cy + Math.sin(p * Math.PI * 2 * freq1 + t) * amp
+                     + Math.sin(p * Math.PI * 2 * (freq1 * 0.4) + t * 0.7) * amp * 0.25;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      if (!reduce) requestAnimationFrame(draw);
+    }
+    if (reduce) draw(0); else requestAnimationFrame(draw);
+  })();
+
+  // ── emblem proximity + glitch ──
+  (function proximity() {
+    const emblem = document.getElementById("hero-emblem");
+    if (!emblem) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const RADIUS = 260;
+    let hot = false;
+    document.addEventListener("mousemove", (e) => {
+      const r = emblem.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const d = Math.hypot(e.clientX - cx, e.clientY - cy);
+      const nowHot = d < RADIUS;
+      if (nowHot !== hot) {
+        hot = nowHot;
+        emblem.classList.remove("is-hot");
+        if (hot) {
+          void (emblem as HTMLElement).offsetWidth;
+          emblem.classList.add("is-hot");
+        }
+      }
+    }, { passive: true });
+  })();
+</script>

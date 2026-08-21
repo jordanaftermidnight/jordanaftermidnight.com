@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jordanaftermidnight — preview 2</title>
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap">
+<style>
+  :root {
+    /* Cool base — slightly warmer than #07070f so gold reveals still feel
+       related to the palette, but firmly cool. */
+    --ink:       #08080F;
+    --ink-2:     #0F0F1A;
+    --surface:   #12121F;
+    --line:      #26263B;
+
+    --cyan:      #00D4FF;
+    --cyan-dim:  #0A5C6E;
+    --cyan-mist: rgba(0, 212, 255, 0.12);
+
+    --gold:      #C19A6B;
+    --gold-hot:  #E3C089;
+
+    --paper:     #E4E8F0;
+    --dust:      #6A7280;
+
+    --font-sans: "Instrument Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, Menlo, monospace;
+
+    --max:       54rem;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    position: relative;
+    /* No bitmap noise — circuit-board SVG handles ambient texture (see #circuit) */
+  }
+  a { color: inherit; text-decoration: none; }
+
+  /* ─── circuit-board background ────────────────────────────────────
+     Inline SVG anchored to the top-right corner. Procedurally generated
+     once on load (deterministic seed → same look every time). Fades toward
+     the bottom-left via CSS mask. Vector = infinite resolution; no
+     pixelation regardless of DPI or viewport size.                       */
+  .circuit-bg {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: min(62vw, 900px);
+    aspect-ratio: 4 / 3;
+    pointer-events: none;
+    z-index: 0;
+    color: var(--cyan);
+    opacity: 0.45;
+    /* Radial mask fades the board so it dissolves toward the wordmark */
+    mask-image: radial-gradient(ellipse 100% 100% at top right,
+      black 0%,
+      black 25%,
+      rgba(0,0,0,0.55) 55%,
+      transparent 85%);
+    -webkit-mask-image: radial-gradient(ellipse 100% 100% at top right,
+      black 0%,
+      black 25%,
+      rgba(0,0,0,0.55) 55%,
+      transparent 85%);
+    animation: circuit-fade-in 1600ms 400ms ease both;
+  }
+  @keyframes circuit-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 0.45; }
+  }
+  /* All page content sits above the circuit-board layer */
+  .preview-bar, main { position: relative; z-index: 2; }
+
+  /* ─── toggle bar ─────────────────────────────────────────────────── */
+  .preview-bar {
+    position: fixed; top: 0; left: 0; right: 0;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0.5rem 1rem;
+    background: color-mix(in oklab, var(--ink) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--dust);
+    z-index: 100;
+  }
+  .preview-bar a { color: var(--dust); transition: color 220ms ease; }
+  .preview-bar a:hover { color: var(--cyan); }
+  .preview-bar .tag {
+    color: var(--cyan);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px color-mix(in oklab, var(--cyan) 40%, transparent);
+  }
+
+  main {
+    max-width: var(--max);
+    margin: 0 auto;
+    padding: 6rem 1.5rem 4rem;
+  }
+
+  /* ─── hero ───────────────────────────────────────────────────────── */
+  .hero {
+    padding-block: clamp(2.5rem, 6vw, 4.5rem);
+    text-align: center;
+  }
+  .emblem {
+    width: 128px; height: 128px;
+    margin: 0 auto 2rem;
+    /* Cyan by default (matches base identity); crossfades to gold on hover
+       — the "warmth breaks through" signature. */
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+    filter: drop-shadow(0 0 20px color-mix(in oklab, var(--cyan) 25%, transparent));
+    animation: fade-up 800ms ease both;
+  }
+  .emblem img {
+    width: 100%; height: 100%;
+    mix-blend-mode: screen;
+    transition: opacity 400ms ease;
+  }
+  .emblem img.gold {
+    position: absolute; inset: 0;
+    opacity: 0;
+  }
+  .emblem:hover img.gold,
+  .emblem.is-hot img.gold { opacity: 1; }
+  .emblem:hover img.cyan,
+  .emblem.is-hot img.cyan { opacity: 0; }
+  .emblem:hover,
+  .emblem.is-hot {
+    filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+  }
+  /* Digital-glitch: RGB split + clip-path banding + scale wobble.
+     Fires each time .is-hot is (re)added. Duration bumped to 450ms so the
+     tear is actually perceivable. */
+  .emblem.is-hot { animation: emblem-glitch 450ms steps(6, end); }
+  @keyframes emblem-glitch {
+    0% {
+      transform: translate(0, 0) scale(1);
+      filter: drop-shadow(0 0 20px rgba(0,212,255,0.5));
+      clip-path: none;
+    }
+    12% {
+      transform: translate(-6px, 3px) scale(1.03);
+      filter: drop-shadow(6px 0 0 #ff2540) drop-shadow(-6px 0 0 #00e4ff) hue-rotate(90deg) contrast(1.4);
+      clip-path: inset(0 0 62% 0);
+    }
+    22% {
+      transform: translate(7px, -2px) scale(0.97);
+      filter: drop-shadow(-5px 0 0 #ff2540) drop-shadow(5px 0 0 #00e4ff) hue-rotate(-60deg);
+      clip-path: inset(58% 0 0 0);
+    }
+    35% {
+      transform: translate(-3px, 2px) scale(1.02);
+      filter: drop-shadow(3px 0 0 #ff2540) drop-shadow(-3px 0 0 #00e4ff) hue-rotate(150deg) blur(0.6px) brightness(1.4);
+      clip-path: inset(28% 0 42% 0);
+    }
+    48% {
+      transform: translate(4px, 0) scale(1);
+      filter: drop-shadow(-2px 0 0 #ff2540) drop-shadow(2px 0 0 #00e4ff);
+      clip-path: none;
+    }
+    62% {
+      transform: translate(-1px, 1px);
+      filter: hue-rotate(30deg) brightness(1.15);
+    }
+    100% {
+      transform: translate(0, 0) scale(1);
+      filter: drop-shadow(0 0 28px color-mix(in oklab, var(--gold-hot) 55%, transparent));
+      clip-path: none;
+    }
+  }
+
+  .wordmark {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(2.2rem, 5vw, 3.2rem);
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    text-shadow: 0 0 30px color-mix(in oklab, var(--cyan) 15%, transparent);
+  }
+
+  /* ─── oscilloscope band — signature motion, shrunk to a signature stripe ── */
+  .osc {
+    display: block;
+    margin: 1rem auto 1.5rem;
+    width: min(420px, 80%);
+    height: 42px;
+  }
+
+  .identity {
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    color: var(--paper);
+    animation: fade-up 800ms 200ms ease both;
+  }
+  .identity .soft {
+    color: var(--dust);
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  /* Currently line — cyberpunk pill chips with cyan glow */
+  .currently {
+    margin-top: 2.25rem;
+    display: flex; align-items: center; justify-content: center;
+    gap: 0.75rem; flex-wrap: wrap;
+    animation: fade-up 800ms 300ms ease both;
+  }
+  .currently-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--cyan);
+    opacity: 0.65;
+  }
+  .currently-label::before {
+    content: ">";
+    color: var(--cyan);
+    margin-right: 0.4em;
+    animation: caret 1.2s steps(1) infinite;
+  }
+  .pills {
+    display: flex; gap: 0.5rem; flex-wrap: wrap; list-style: none;
+    justify-content: center;
+  }
+  .pill {
+    display: inline-block;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-family: var(--font-mono);
+    letter-spacing: 0.03em;
+    color: var(--paper);
+    background: color-mix(in oklab, var(--surface) 70%, transparent);
+    transition: border-color 220ms ease, color 220ms ease,
+                box-shadow 220ms ease, transform 220ms ease;
+    opacity: 0; transform: translateY(4px);
+    animation: pill-in 500ms ease forwards;
+  }
+  .pills li:nth-child(1) .pill { animation-delay: 400ms; }
+  .pills li:nth-child(2) .pill { animation-delay: 480ms; }
+  .pills li:nth-child(3) .pill { animation-delay: 560ms; }
+  .pills li:nth-child(4) .pill { animation-delay: 640ms; }
+  .pill:hover {
+    /* Louder gold: brighter border, warmer background wash, wider glow */
+    border-color: var(--gold-hot);
+    color: var(--gold-hot);
+    background: color-mix(in oklab, var(--gold) 12%, var(--surface));
+    box-shadow:
+      0 0 22px color-mix(in oklab, var(--gold) 50%, transparent),
+      inset 0 0 12px color-mix(in oklab, var(--gold) 18%, transparent);
+    transform: translateY(-1px) scale(1.02);
+  }
+
+  .links {
+    margin-top: 2.25rem;
+    display: flex; justify-content: center; gap: 1.25rem;
+    flex-wrap: wrap; list-style: none;
+    animation: fade-up 800ms 700ms ease both;
+  }
+  .links a {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--dust);
+    padding-block: 0.25rem;
+    border-bottom: 1px solid transparent;
+    transition: color 220ms ease, border-color 220ms ease, text-shadow 220ms ease;
+  }
+  .links a:hover {
+    color: var(--gold-hot);
+    border-color: var(--gold-hot);
+    text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 55%, transparent);
+  }
+
+  /* ─── section ────────────────────────────────────────────────────── */
+  .section {
+    margin-top: 7rem;
+    padding-top: 3rem;
+    border-top: 1px solid var(--line);
+    position: relative;
+    overflow: hidden;
+  }
+  /* Scan-line reveal — one-time on section entry (JS toggles .in-view) */
+  .section::before {
+    content: "";
+    position: absolute; top: -1px; left: 0; right: 100%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    box-shadow: 0 0 12px var(--cyan);
+    transition: right 900ms ease-out;
+  }
+  .section.in-view::before { right: 0; }
+
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    flex-wrap: wrap; gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .section-head h2 {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: clamp(1.4rem, 2.4vw, 1.75rem);
+    letter-spacing: -0.01em;
+    color: var(--paper);
+  }
+  .section-head h2::before {
+    content: "#";
+    color: var(--cyan);
+    margin-right: 0.4em;
+    font-weight: 400;
+    opacity: 0.8;
+    text-shadow: 0 0 10px color-mix(in oklab, var(--cyan) 40%, transparent);
+  }
+  .section-head .meta {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--dust);
+  }
+
+  /* ─── project grid ───────────────────────────────────────────────── */
+  .grid { display: grid; gap: 1rem; }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .project {
+    display: flex; flex-direction: column;
+    padding: 1.25rem 1.25rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    transition: border-color 220ms ease, transform 220ms ease,
+                box-shadow 220ms ease, background 220ms ease;
+    position: relative;
+  }
+  .project:hover {
+    border-color: var(--gold-hot);
+    box-shadow: 0 0 22px color-mix(in oklab, var(--gold) 35%, transparent);
+    transform: translateY(-2px);
+    background: color-mix(in oklab, var(--surface) 88%, var(--gold) 6%);
+  }
+  .project::after {
+    content: "→";
+    position: absolute; top: 1rem; right: 1rem;
+    color: var(--line);
+    font-size: 14px;
+    transition: color 220ms ease, transform 220ms ease;
+  }
+  .project:hover::after {
+    color: var(--gold-hot);
+    transform: translateX(3px);
+  }
+  .project-head {
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.6rem;
+  }
+  .project-name {
+    font-family: var(--font-sans);
+    font-weight: 600;
+    font-size: 1rem;
+    letter-spacing: 0.02em;
+    color: var(--paper);
+    transition: color 220ms ease, text-shadow 220ms ease;
+  }
+  .project:hover .project-name {
+    color: var(--gold-hot);
+    text-shadow: 0 0 12px color-mix(in oklab, var(--gold) 55%, transparent);
+  }
+  .lang-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--lang, var(--cyan));
+    margin-left: auto;
+    box-shadow: 0 0 6px var(--lang, var(--cyan));
+  }
+  .lang-name {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dust);
+    letter-spacing: 0.05em;
+  }
+  .project-desc {
+    color: var(--paper);
+    opacity: 0.7;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 1rem;
+    flex: 1;
+  }
+  .project-meta {
+    display: flex; gap: 0.6rem; align-items: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--dust);
+    letter-spacing: 0.03em;
+  }
+  .project-meta .dot { opacity: 0.5; }
+
+  /* ─── footer ─────────────────────────────────────────────────────── */
+  .foot {
+    margin-top: 6rem; padding-top: 2rem;
+    border-top: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--dust);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+  }
+
+  /* ─── keyframes ──────────────────────────────────────────────────── */
+  @keyframes fade-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pill-in { to { opacity: 1; transform: translateY(0); } }
+  @keyframes caret { 50% { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+    .pill { opacity: 1; transform: none; }
+    .section::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Procedurally-generated circuit board, top-right, fades toward center -->
+<svg class="circuit-bg" id="circuit" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
+
+<div class="preview-bar">
+  <a href="/">← current site</a>
+  <span class="tag">preview 2 · cyberpunk restraint</span>
+  <a href="/preview.html">warm-black →</a>
+</div>
+
+<main>
+
+  <!-- ─── HERO ────────────────────────────────────────────────── -->
+  <section class="hero">
+    <a href="#" class="emblem" aria-label="Jordanaftermidnight">
+      <img class="cyan" src="/brand/icon-emblem-cyan.png" alt="" width="128" height="128">
+      <img class="gold" src="/brand/icon-emblem-gold.png" alt="" width="128" height="128">
+    </a>
+    <h1 class="wordmark" id="wordmark">Jordanaftermidnight</h1>
+
+    <canvas class="osc" id="osc" width="840" height="84"></canvas>
+
+    <p class="identity">
+      I build eurorack modules, AI tools, and music.<br>
+      <span class="soft">Sometimes the research shows through.</span>
+    </p>
+
+    <div class="currently">
+      <span class="currently-label">Currently</span>
+      <ul class="pills">
+        <li><a class="pill" href="#modules">EFFIGY</a></li>
+        <li><a class="pill" href="#modules">MACROBRUTE</a></li>
+        <li><a class="pill" href="#software">IRIS</a></li>
+        <li><a class="pill" href="#research">THELOS</a></li>
+      </ul>
+    </div>
+
+    <ul class="links">
+      <li><a href="https://github.com/" target="_blank" rel="noopener">github</a></li>
+      <li><a href="https://bandcamp.com/" target="_blank" rel="noopener">bandcamp</a></li>
+      <li><a href="mailto:jordan@aftermidnight.studio">email</a></li>
+      <li><a href="#">resume</a></li>
+    </ul>
+  </section>
+
+  <!-- ─── SOFTWARE ────────────────────────────────────────────── -->
+  <section id="software" class="section">
+    <header class="section-head">
+      <h2>Software</h2>
+      <span class="meta">open source · auto-updated</span>
+    </header>
+
+    <div class="grid grid-2" id="software-grid">
+      <a class="project" href="https://github.com/" target="_blank" rel="noopener" data-repo="iris">
+        <div class="project-head">
+          <span class="project-name">IRIS</span>
+          <span class="lang-dot" style="--lang: #00d4ff"></span>
+          <span class="lang-name">Python</span>
+        </div>
+        <p class="project-desc">Multi-provider AI router. Route across Anthropic / OpenAI / local Ollama with adaptive load and cache-aware pinning.</p>
+        <div class="project-meta">
+          <span>★ 12</span><span class="dot">·</span><span>updated 3d ago</span>
+        </div>
+      </a>
+
+      <a class="project" href="https://github.com/" target="_blank" rel="noopener" data-repo="mnemosyne">
+        <div class="project-head">
+          <span class="project-name">MNEMOSYNE</span>
+          <span class="lang-dot" style="--lang: #8b5cf6"></span>
+          <span class="lang-name">TypeScript</span>
+        </div>
+        <p class="project-desc">Persistent memory layer for agent workflows. Structured recall with vector + graph hybrid.</p>
+        <div class="project-meta">
+          <span>★ 8</span><span class="dot">·</span><span>updated 1w ago</span>
+        </div>
+      </a>
+
+      <a class="project" href="https://github.com/" target="_blank" rel="noopener" data-repo="localmem">
+        <div class="project-head">
+          <span class="project-name">localmem</span>
+          <span class="lang-dot" style="--lang: #00d4ff"></span>
+          <span class="lang-name">Python</span>
+        </div>
+        <p class="project-desc">Local-first MCP server. Multi-agent memory + hybrid search + behavioral graph traversal.</p>
+        <div class="project-meta">
+          <span>★ 24</span><span class="dot">·</span><span>updated today</span>
+        </div>
+      </a>
+
+      <a class="project" href="https://github.com/" target="_blank" rel="noopener" data-repo="driftfield">
+        <div class="project-head">
+          <span class="project-name">DRIFTFIELD</span>
+          <span class="lang-dot" style="--lang: #dea584"></span>
+          <span class="lang-name">Rust</span>
+        </div>
+        <p class="project-desc">Time-series experimentation toolkit. Signal correlation across streams with pluggable transforms.</p>
+        <div class="project-meta">
+          <span>★ 5</span><span class="dot">·</span><span>updated 2w ago</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <div class="foot">
+    <span>preview 2 · cyan base + selective motion + gold-on-hover reveals</span>
+    <span>v0.2</span>
+  </div>
+
+</main>
+
+<script>
+  // ─── CIRCUIT BOARD BACKGROUND ──────────────────────────────────────
+  // Draws a plausible-looking PCB in inline SVG: chips with pins, traces
+  // walking on a grid with right-angle turns, vias/pads, small SMD parts.
+  // Deterministic (seeded) so the same layout renders every visit.
+  (function circuitboard() {
+    const svg = document.getElementById("circuit");
+    if (!svg) return;
+
+    const VB_W = 800, VB_H = 600, GRID = 20;
+    svg.setAttribute("viewBox", `0 0 ${VB_W} ${VB_H}`);
+    svg.setAttribute("preserveAspectRatio", "xMaxYMin slice");
+
+    // Seeded PRNG for a repeatable board
+    let seed = 137;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    const rint = (a, b) => Math.floor(rnd() * (b - a + 1)) + a;
+    const chance = (p) => rnd() < p;
+
+    const NS = "http://www.w3.org/2000/svg";
+    const mk = (tag, attrs, text) => {
+      const e = document.createElementNS(NS, tag);
+      for (const k in attrs) e.setAttribute(k, attrs[k]);
+      if (text != null) e.textContent = text;
+      svg.appendChild(e);
+      return e;
+    };
+
+    // ── chips (drawn as outlined rects with pin dots + label) ──
+    function chip(cx, cy, w, h, label) {
+      const x = cx * GRID, y = cy * GRID, pw = w * GRID, ph = h * GRID;
+      mk("rect", {
+        x, y, width: pw, height: ph, rx: 1.5, ry: 1.5,
+        fill: "none", stroke: "currentColor", "stroke-width": 1.2, opacity: 0.75,
+      });
+      // orientation dot
+      mk("circle", { cx: x + 5, cy: y + 5, r: 1.8, fill: "currentColor", opacity: 0.75 });
+      // label
+      mk("text", {
+        x: x + pw / 2, y: y + ph / 2 + 3,
+        "text-anchor": "middle",
+        "font-family": "Space Mono, ui-monospace, monospace",
+        "font-size": 7,
+        fill: "currentColor",
+        opacity: 0.55,
+        "letter-spacing": "0.05em",
+      }, label);
+      // pins along all four edges
+      const pins = [];
+      for (let i = 1; i < w; i++) {
+        pins.push({ x: (cx + i) * GRID, y, side: "top" });
+        pins.push({ x: (cx + i) * GRID, y: y + ph, side: "bottom" });
+      }
+      for (let i = 1; i < h; i++) {
+        pins.push({ x, y: (cy + i) * GRID, side: "left" });
+        pins.push({ x: x + pw, y: (cy + i) * GRID, side: "right" });
+      }
+      pins.forEach((p) => {
+        mk("circle", { cx: p.x, cy: p.y, r: 1.4, fill: "currentColor", opacity: 0.55 });
+      });
+      return pins;
+    }
+
+    // ── trace walk (right-angle Manhattan path from a pin outward) ──
+    function trace(startX, startY, initialDir, maxSteps = 4, thickness = 1) {
+      let x = startX, y = startY, dir = initialDir;
+      const d = [`M ${x} ${y}`];
+      const steps = rint(2, maxSteps);
+      for (let i = 0; i < steps; i++) {
+        const dist = rint(2, 5) * GRID;
+        if (dir === "right") x = Math.min(VB_W - 6, x + dist);
+        else if (dir === "left") x = Math.max(6, x - dist);
+        else if (dir === "up")   y = Math.max(6, y - dist);
+        else if (dir === "down") y = Math.min(VB_H - 6, y + dist);
+        d.push(`L ${x} ${y}`);
+        if (chance(0.6)) {
+          if (dir === "right" || dir === "left") dir = chance(0.5) ? "up" : "down";
+          else dir = chance(0.5) ? "left" : "right";
+        }
+      }
+      mk("path", {
+        d: d.join(" "),
+        fill: "none",
+        stroke: "currentColor",
+        "stroke-width": thickness,
+        "stroke-linecap": "round",
+        "stroke-linejoin": "miter",
+        opacity: 0.35 + rnd() * 0.25,
+      });
+      // Sometimes terminate with a via
+      if (chance(0.55)) {
+        mk("circle", { cx: x, cy: y, r: 2.2, fill: "currentColor", opacity: 0.7 });
+        mk("circle", { cx: x, cy: y, r: 1.1, fill: "var(--ink)", opacity: 1 });
+      }
+    }
+
+    // ── SMD passives ──
+    function smd(cx, cy) {
+      const orient = chance(0.5) ? "h" : "v";
+      const x = cx * GRID, y = cy * GRID;
+      const w = orient === "h" ? 10 : 5;
+      const h = orient === "h" ? 5 : 10;
+      mk("rect", {
+        x, y, width: w, height: h,
+        fill: "none", stroke: "currentColor", "stroke-width": 0.7, opacity: 0.5,
+      });
+    }
+
+    // Electrolytic capacitor: circle with a polarity notch on one side
+    function elcap(cx, cy, r = 6) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("circle", { cx: x, cy: y, r, fill: "none", stroke: "currentColor",
+                     "stroke-width": 0.9, opacity: 0.55 });
+      // Polarity arc — filled quarter
+      mk("path", {
+        d: `M ${x - r + 1} ${y} A ${r - 1} ${r - 1} 0 0 1 ${x - 1} ${y - r + 1}`,
+        stroke: "currentColor", "stroke-width": 0.9, fill: "none", opacity: 0.55,
+      });
+    }
+
+    // Diode symbol: triangle + cathode line
+    function diode(cx, cy) {
+      const x = cx * GRID, y = cy * GRID;
+      const s = 6;
+      mk("path", {
+        d: `M ${x} ${y - s/2} L ${x} ${y + s/2} L ${x + s} ${y} Z`,
+        fill: "currentColor", opacity: 0.55, stroke: "none",
+      });
+      mk("line", {
+        x1: x + s, y1: y - s/2, x2: x + s, y2: y + s/2,
+        stroke: "currentColor", "stroke-width": 1.1, opacity: 0.65,
+      });
+    }
+
+    // Inductor: series of small humps
+    function inductor(cx, cy) {
+      const x = cx * GRID, y = cy * GRID;
+      let d = `M ${x} ${y}`;
+      for (let i = 0; i < 4; i++) {
+        d += ` a 3 3 0 0 1 6 0`;
+      }
+      mk("path", {
+        d, fill: "none", stroke: "currentColor",
+        "stroke-width": 0.9, opacity: 0.55, "stroke-linecap": "round",
+      });
+    }
+
+    // Resistor: rectangular body with two leads
+    function resistor(cx, cy) {
+      const x = cx * GRID, y = cy * GRID;
+      mk("rect", { x, y: y - 2.5, width: 14, height: 5,
+                   fill: "none", stroke: "currentColor",
+                   "stroke-width": 0.8, opacity: 0.55, rx: 0.5 });
+      mk("line", { x1: x - 3, y1: y, x2: x, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
+      mk("line", { x1: x + 14, y1: y, x2: x + 17, y2: y,
+                   stroke: "currentColor", "stroke-width": 0.8, opacity: 0.55 });
+    }
+
+    // QFN-style chip (larger, denser pins on all four sides)
+    function qfn(cx, cy, w, h, label) {
+      const x = cx * GRID, y = cy * GRID, pw = w * GRID, ph = h * GRID;
+      mk("rect", { x, y, width: pw, height: ph, rx: 3, ry: 3,
+                   fill: "none", stroke: "currentColor", "stroke-width": 1.4,
+                   opacity: 0.8 });
+      // Inner die outline
+      mk("rect", { x: x + 5, y: y + 5, width: pw - 10, height: ph - 10, rx: 1,
+                   fill: "none", stroke: "currentColor", "stroke-width": 0.6,
+                   opacity: 0.4 });
+      // Corner orientation dot
+      mk("circle", { cx: x + 4, cy: y + 4, r: 1.8, fill: "currentColor", opacity: 0.85 });
+      // Label
+      mk("text", {
+        x: x + pw / 2, y: y + ph / 2 + 3,
+        "text-anchor": "middle",
+        "font-family": "Space Mono, ui-monospace, monospace",
+        "font-size": 8,
+        fill: "currentColor",
+        opacity: 0.65,
+        "letter-spacing": "0.05em",
+      }, label);
+      // Dense pins (every 4px along edges)
+      const pins = [];
+      const step = 4;
+      for (let px = x + step; px < x + pw; px += step) {
+        pins.push({ x: px, y, side: "top" });
+        pins.push({ x: px, y: y + ph, side: "bottom" });
+      }
+      for (let py = y + step; py < y + ph; py += step) {
+        pins.push({ x, y: py, side: "left" });
+        pins.push({ x: x + pw, y: py, side: "right" });
+      }
+      pins.forEach((p) => {
+        mk("line", {
+          x1: p.side === "left" || p.side === "right" ? p.x + (p.side === "left" ? -3 : 3) : p.x,
+          y1: p.side === "top" || p.side === "bottom" ? p.y + (p.side === "top" ? -3 : 3) : p.y,
+          x2: p.x, y2: p.y,
+          stroke: "currentColor", "stroke-width": 0.8, opacity: 0.5,
+        });
+      });
+      return pins.filter((_, i) => i % 2 === 0); // sparse for trace spawning
+    }
+
+    // ── compose the scene ──
+    const chipRects = [];
+    const trackChip = (cx, cy, w, h) => chipRects.push({ cx, cy, w, h });
+
+    // Big QFN-style processor anchoring the top-right corner
+    const p0 = qfn(32, 2, 7, 6, "MCU");    trackChip(32, 2, 7, 6);
+    // A pair of standard ICs
+    const p1 = chip(22, 3,  6, 4, "U1");   trackChip(22, 3, 6, 4);
+    const p2 = chip(26, 10, 4, 3, "U2");   trackChip(26, 10, 4, 3);
+    // Wider IC lower down
+    const p3 = chip(19, 17, 5, 2, "U3");   trackChip(19, 17, 5, 2);
+
+    // Spawn traces outward from a subset of chip pins
+    [...p0, ...p1, ...p2, ...p3].forEach((p) => {
+      if (!chance(0.55)) return;
+      const dir = p.side === "left" ? "left"
+                : p.side === "right" ? "right"
+                : p.side === "top" ? "up" : "down";
+      trace(p.x, p.y, dir, 5, chance(0.18) ? 1.4 : 1);
+    });
+
+    // Long "bus" traces (power/ground rails)
+    for (let i = 0; i < 5; i++) {
+      const startX = rint(20, 38) * GRID;
+      const startY = rint(2, 6) * GRID;
+      trace(startX, startY, chance(0.5) ? "left" : "down", 9, 1.5);
+    }
+
+    // ── Discrete components — variety of abstract PCB parts ──
+    const inside = (c, r) => chipRects.some((k) =>
+      c >= k.cx - 1 && c <= k.cx + k.w + 1 &&
+      r >= k.cy - 1 && r <= k.cy + k.h + 1);
+
+    // A few polarized capacitors (biggest visual weight after chips)
+    for (let i = 0; i < 6; i++) {
+      const col = rint(16, 38), row = rint(2, 25);
+      if (inside(col, row)) continue;
+      elcap(col, row, rint(4, 7));
+    }
+    // Resistors
+    for (let i = 0; i < 10; i++) {
+      const col = rint(16, 36), row = rint(2, 26);
+      if (inside(col, row)) continue;
+      resistor(col, row);
+    }
+    // Diodes
+    for (let i = 0; i < 6; i++) {
+      const col = rint(17, 37), row = rint(2, 26);
+      if (inside(col, row)) continue;
+      diode(col, row);
+    }
+    // Inductors
+    for (let i = 0; i < 3; i++) {
+      const col = rint(17, 34), row = rint(4, 24);
+      if (inside(col, row)) continue;
+      inductor(col, row);
+    }
+    // Passive SMDs (small chips/resistors)
+    for (let i = 0; i < 24; i++) {
+      const col = rint(16, 39), row = rint(1, 27);
+      if (inside(col, row)) continue;
+      smd(col, row);
+    }
+    // Isolated vias — the connective dots
+    for (let i = 0; i < 28; i++) {
+      const col = rint(15, 39), row = rint(2, 27);
+      if (inside(col, row)) continue;
+      mk("circle", {
+        cx: col * GRID, cy: row * GRID,
+        r: chance(0.5) ? 1.4 : 2.2,
+        fill: "currentColor", opacity: 0.35 + rnd() * 0.3,
+      });
+    }
+  })();
+
+  // ─── TEXT SCRAMBLE on wordmark ─────────────────────────────────────
+  // Small self-contained scramble effect. On load, cycles through random
+  // glyphs before settling on the true text. Then quiet.
+  (function scrambleWordmark() {
+    const el = document.getElementById("wordmark");
+    if (!el) return;
+    const target = el.textContent.trim();
+    const glyphs = "!<>-_\\/[]{}—=+*^?#";
+    let frame = 0;
+    const duration = 900; // ms
+    const start = performance.now();
+
+    function tick(now) {
+      const t = Math.min(1, (now - start) / duration);
+      let out = "";
+      for (let i = 0; i < target.length; i++) {
+        const settleAt = i / target.length;
+        if (t >= settleAt) out += target[i];
+        else out += target[i] === " " ? " " : glyphs[Math.floor(Math.random() * glyphs.length)];
+      }
+      el.textContent = out;
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = target;
+    }
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      requestAnimationFrame(tick);
+    }
+  })();
+
+  // ─── OSCILLOSCOPE BAND under wordmark ──────────────────────────────
+  // Small band, not full-viewport. Cool cyan, subtle. Fades near the edges
+  // so it reads as a signature stripe rather than a screen-eating canvas.
+  (function osc() {
+    const c = document.getElementById("osc");
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function fit() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssW = c.getBoundingClientRect().width;
+      const cssH = c.getBoundingClientRect().height;
+      c.width = cssW * dpr;
+      c.height = cssH * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    fit();
+    window.addEventListener("resize", fit);
+
+    let mouseX = 0.5;
+    document.addEventListener("mousemove", (e) => {
+      mouseX = e.clientX / window.innerWidth;
+    });
+
+    function draw(now) {
+      const w = c.getBoundingClientRect().width;
+      const h = c.getBoundingClientRect().height;
+      ctx.clearRect(0, 0, w, h);
+
+      // Longer, softer taper — line emerges from nothing and dissolves back
+      const grad = ctx.createLinearGradient(0, 0, w, 0);
+      grad.addColorStop(0.00, "rgba(0, 212, 255, 0)");
+      grad.addColorStop(0.10, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(0.30, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.50, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.70, "rgba(0, 212, 255, 0.75)");
+      grad.addColorStop(0.90, "rgba(0, 212, 255, 0.15)");
+      grad.addColorStop(1.00, "rgba(0, 212, 255, 0)");
+
+      const cy = h / 2;
+      const amp = h * 0.28;
+      const freq1 = 2 + mouseX * 2;
+      const t = now * 0.001;
+
+      // Glow layer
+      ctx.save();
+      ctx.filter = "blur(4px)";
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const p = x / w;
+        const y = cy
+          + Math.sin(p * Math.PI * 2 * freq1 + t) * amp
+          + Math.sin(p * Math.PI * 2 * (freq1 * 0.4) + t * 0.7) * amp * 0.25;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      // Sharp line
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let x = 0; x <= w; x += 2) {
+        const p = x / w;
+        const y = cy
+          + Math.sin(p * Math.PI * 2 * freq1 + t) * amp
+          + Math.sin(p * Math.PI * 2 * (freq1 * 0.4) + t * 0.7) * amp * 0.25;
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      if (!reduce) requestAnimationFrame(draw);
+    }
+    if (reduce) {
+      // Static single sine wave for reduced-motion users
+      draw(0);
+    } else {
+      requestAnimationFrame(draw);
+    }
+  })();
+
+  // ─── EMBLEM PROXIMITY + GLITCH ─────────────────────────────────────
+  // When the cursor enters a ~220px radius around the emblem, add .is-hot
+  // → CSS crossfades to gold AND fires the 220ms glitch keyframe. Leaves
+  // the class off when far away so re-entry re-triggers the glitch.
+  (function emblemProximity() {
+    const emblem = document.querySelector(".emblem");
+    if (!emblem) return;
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const RADIUS = 260;
+    let hot = false;
+    document.addEventListener("mousemove", (e) => {
+      const r = emblem.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const d = Math.hypot(e.clientX - cx, e.clientY - cy);
+      const nowHot = d < RADIUS;
+      if (nowHot !== hot) {
+        hot = nowHot;
+        // Force reflow so the keyframe animation replays each entry
+        emblem.classList.remove("is-hot");
+        if (hot) {
+          void emblem.offsetWidth;
+          emblem.classList.add("is-hot");
+        }
+      }
+    }, { passive: true });
+  })();
+
+  // ─── SECTION SCAN-LINE REVEAL ───────────────────────────────────────
+  // One-time cyan line sweep across the top border when a section enters view.
+  (function sectionReveals() {
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          e.target.classList.add("in-view");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    document.querySelectorAll(".section").forEach((s) => io.observe(s));
+  })();
+
+  // ─── GITHUB API (progressive enhancement, same as preview 1) ────────
+  const GITHUB_USER = null;
+  if (GITHUB_USER) {
+    (async () => {
+      try {
+        const r = await fetch(`https://api.github.com/users/${GITHUB_USER}/repos?per_page=100&sort=updated`);
+        const repos = (await r.json()).reduce((m, x) => (m[x.name.toLowerCase()] = x, m), {});
+        document.querySelectorAll(".project[data-repo]").forEach((el) => {
+          const repo = repos[el.dataset.repo.toLowerCase()];
+          if (!repo) return;
+          const meta = el.querySelector(".project-meta");
+          const updated = new Date(repo.pushed_at);
+          const days = Math.max(1, Math.round((Date.now() - updated) / 86400000));
+          const rel = days < 7 ? `${days}d ago`
+                    : days < 30 ? `${Math.round(days / 7)}w ago`
+                                : `${Math.round(days / 30)}mo ago`;
+          meta.innerHTML = `<span>★ ${repo.stargazers_count}</span><span class="dot">·</span><span>updated ${rel}</span>`;
+        });
+      } catch (e) { /* keep placeholder */ }
+    })();
+  }
+</script>
+</body>
+</html>
