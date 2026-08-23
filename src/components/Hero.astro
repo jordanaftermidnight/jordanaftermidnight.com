@@ -364,4 +364,27 @@ import CircuitBackground from "./CircuitBackground.astro";
       }
     }, { passive: true });
   })();
+
+  // ── easter egg: 5 clicks on the emblem within 3s → /midnight ──
+  // No visible hint; the glitch already fires on click so each tap looks
+  // like the normal proximity effect. Reward for someone actually poking.
+  (function unlock() {
+    const emblem = document.getElementById("hero-emblem");
+    if (!emblem) return;
+    const WINDOW_MS = 3000;
+    const THRESHOLD = 5;
+    let stamps: number[] = [];
+    // The emblem's href="#top" is intercepted — it's decorative +
+    // easter-egg surface, not a real return-to-top link.
+    emblem.addEventListener("click", (e) => {
+      e.preventDefault();
+      const now = performance.now();
+      stamps = stamps.filter((t) => now - t < WINDOW_MS);
+      stamps.push(now);
+      if (stamps.length >= THRESHOLD) {
+        stamps = [];
+        window.location.href = "/midnight";
+      }
+    });
+  })();
 </script>

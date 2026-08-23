@@ -4,7 +4,14 @@ const year = new Date().getFullYear();
 
 <footer class="foot">
   <div class="inner">
-    <span>&copy; {year} Jordanaftermidnight</span>
+    <span>
+      &copy; {year} Jordanaftermidnight
+      {/* After-midnight easter-egg hint. Rendered hidden; client script
+          reveals it when the visitor's local hour is 0-4. */}
+      <span class="late" hidden>
+        · <a href="/midnight">the board is live ↗</a>
+      </span>
+    </span>
     <span class="tag">jordanaftermidnight.com</span>
   </div>
 </footer>
@@ -26,4 +33,21 @@ const year = new Date().getFullYear();
     color: var(--dust);
   }
   .tag { color: var(--cyan); opacity: 0.6; letter-spacing: 0.08em; }
+  .late a {
+    color: var(--dust);
+    opacity: 0.45;
+    text-decoration: none;
+    transition: opacity 220ms ease, color 220ms ease;
+  }
+  .late a:hover {
+    opacity: 1;
+    color: var(--gold-hot);
+  }
 </style>
+
+<script>
+  // Reveal the /midnight hint between 00:00 and 04:59 local time.
+  // Daytime visitors see nothing; night-owls get the doorway.
+  const hint = document.querySelector<HTMLElement>(".foot .late");
+  if (hint && new Date().getHours() < 5) hint.hidden = false;
+</script>

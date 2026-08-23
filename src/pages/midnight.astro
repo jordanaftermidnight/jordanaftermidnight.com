@@ -1,0 +1,432 @@
+---
+// /midnight — signal patchbay
+// Hidden easter egg page: a working Web Audio modular synth. Not linked
+// from the main nav. Two discovery routes: emblem×5 click in Hero, and
+// a subtle footer link that appears after 00:00 local time.
+//
+// This page intentionally doesn't use the site's Layout — it's its own
+// world, self-contained. `noindex` keeps it out of search.
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>/midnight — signal patchbay</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#08080F; --ink2:#0A0C14; --panel:#0D1019; --line:#1c2230; --line-cyan:#24455a; --cv:#1b3341;
+    --cyan:#00D4FF; --cyan-soft:#5f8fa3; --gold:#C19A6B; --gold-hot:#E3C089;
+    --paper:#E6E9F0; --body:#9aa1b4; --dust:#6d7484; }
+  * { box-sizing: border-box; margin: 0; }
+  body { background: var(--ink); color: var(--paper); font-family: 'Space Mono', monospace; user-select: none; }
+  a { color: var(--paper); text-decoration: none; } a:hover { color: var(--gold-hot); }
+  input[type=range] { accent-color: var(--cyan); width: 100%; display: block; margin-top: 4px; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 40px 24px 56px; }
+  .head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; }
+  .head h1 { font-size: 24px; margin-top: 10px; letter-spacing: -0.01em; }
+  .crumb { font-size: 12px; color: var(--dust); } .crumb b { color: var(--cyan); font-weight: 400; }
+  .sub { font-size: 12.5px; color: var(--body); margin-top: 6px; }
+  .sub .au { color: var(--gold); } .sub .cv { color: var(--cyan); }
+  #power { border: 1px solid var(--line-cyan); color: var(--cyan); background: rgba(18,18,31,0.7); border-radius: 4px;
+    padding: 12px 26px; font: 700 13px 'Space Mono', monospace; cursor: pointer; letter-spacing: 0.1em; }
+  #power:hover, #init:hover { border-color: var(--gold-hot); color: var(--gold-hot); }
+  #init { border: 1px solid #26263B; color: var(--body); background: rgba(18,18,31,0.7); border-radius: 4px;
+    padding: 12px 20px; font: 400 13px 'Space Mono', monospace; cursor: pointer; letter-spacing: 0.1em; }
+  #power.on { border-color: var(--gold); color: var(--gold-hot); }
+  #board { position: relative; margin-top: 28px; border: 1px solid var(--line-cyan); background: var(--ink2);
+    padding: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .mod { border: 1px solid var(--line); background: var(--panel); position: relative; padding: 16px 16px 14px; }
+  .mod::before { content: ''; position: absolute; top: 0; left: 14px; right: 14px; height: 5px;
+    background: repeating-linear-gradient(90deg, var(--line-cyan) 0 3px, transparent 3px 13px); }
+  .mod .hd { display: flex; justify-content: space-between; align-items: baseline; margin-top: 4px; }
+  .mod .des { font-size: 11px; color: var(--gold); } .mod .nm { font-size: 12px; font-weight: 700; }
+  .mod .nm small { font-weight: 400; color: var(--dust); font-size: 10px; }
+  .mod label { display: block; margin-top: 8px; font-size: 10px; color: var(--dust); }
+  .mod label:first-of-type { margin-top: 14px; }
+  .waves { display: flex; gap: 4px; margin-top: 12px; }
+  .waves div { flex: 1; text-align: center; font-size: 9px; padding: 4px 0; border: 1px solid var(--line); color: var(--dust); cursor: pointer; }
+  .waves div.sel { border-color: var(--cyan); color: var(--cyan); }
+  .jacks { display: flex; justify-content: space-between; margin-top: 12px; }
+  .jacks.end { justify-content: flex-end; }
+  .jack { text-align: center; }
+  .jack i { display: block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-cyan); background: var(--ink); cursor: crosshair; margin: 0 auto; }
+  .jack.out i { border-color: var(--gold); } .jack.out i:hover { border-color: var(--gold-hot); background: #1a150e; }
+  .jack.cvj i { border-color: var(--cv); } .jack.cvj i:hover { border-color: var(--cyan); }
+  .jack i:hover { border-color: var(--gold-hot); }
+  .jack span { font-size: 9px; color: var(--dust); margin-top: 3px; display: block; }
+  .jack.cvj span { color: var(--cyan-soft); }
+  .note { font-size: 9px; color: var(--cyan-soft); margin-top: 10px; }
+  .stepsrow { display: flex; gap: 4px; margin-top: 16px; }
+  .stepcol { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .step { width: 22px; height: 46px; border: 1px solid var(--line-cyan); background: var(--ink2); cursor: ns-resize; position: relative; }
+  .step em { position: absolute; left: 0; right: 0; bottom: 0; background: rgba(109,116,132,0.25); pointer-events: none; }
+  .step.on em { background: rgba(0,212,255,0.55); }
+  .step.cur { border-color: var(--gold-hot); } .step.cur.on em { background: var(--gold-hot); }
+  .stepcol span { font-size: 8px; color: #3a4054; pointer-events: none; }
+  .stepcol.on span { color: var(--cyan-soft); }
+  .hint9 { font-size: 9px; color: var(--dust); margin-top: 8px; }
+  #scope { width: 100%; height: 60px; display: block; margin-top: 14px; background: var(--ink); border: 1px solid var(--line); }
+  #cablesvg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+  #cablesvg path.cable { pointer-events: stroke; cursor: pointer; }
+  .foot { display: flex; justify-content: space-between; margin-top: 16px; font-size: 11px; color: var(--dust); }
+
+  /* ─── mobile: horizontal-scroll board + landscape hint ─────────── */
+  /* Wraps #board on all screens; only enables scroll on narrow viewports */
+  .board-wrap { position: relative; overflow: visible; }
+  @media (max-width: 900px) {
+    .board-wrap {
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      /* Extend flush to viewport edges so the scroll feels intentional */
+      margin-inline: -24px;
+      padding-inline: 24px;
+      padding-bottom: 8px;
+    }
+    #board {
+      /* Keep the 4-col layout; force wider than viewport so scroll engages */
+      min-width: 880px;
+      grid-template-columns: repeat(4, 1fr);
+      /* Board can pan horizontally; cable drags on jacks override this */
+      touch-action: pan-x;
+    }
+    /* Jacks own their pointer events — no page scroll while dragging cables */
+    .jack i { touch-action: none; }
+    /* Steps: allow vertical drag for tuning without triggering page scroll */
+    .step { touch-action: none; }
+  }
+
+  .landscape-hint {
+    display: none;
+    position: fixed;
+    top: 12px; left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 14px;
+    background: rgba(13, 16, 25, 0.95);
+    border: 1px solid var(--line-cyan);
+    border-radius: 4px;
+    color: var(--cyan);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    z-index: 100;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .landscape-hint button {
+    background: none; border: none; color: var(--dust);
+    cursor: pointer; padding: 0 4px; margin-left: 8px;
+    font: inherit;
+  }
+  .landscape-hint button:hover { color: var(--gold-hot); }
+  @media (orientation: portrait) and (max-width: 900px) {
+    .landscape-hint:not(.dismissed) { display: block; }
+  }
+</style>
+</head>
+<body>
+<div class="landscape-hint" role="status">
+  rotate to landscape for the full board
+  <button type="button" aria-label="Dismiss hint">×</button>
+</div>
+
+<div class="wrap">
+  <div class="head">
+    <div>
+      <div class="crumb">jordanaftermidnight.com<b>/midnight</b></div>
+      <h1>you made it past midnight.</h1>
+      <div class="sub">the board is live. drag a jack to a jack to patch — click a cable to cut it. <span class="au">gold carries audio</span>, <span class="cv">cyan carries control</span>.</div>
+    </div>
+    <div style="display:flex;gap:10px"><button id="init">INIT</button><button id="power">▶ POWER</button></div>
+  </div>
+  <div class="board-wrap">
+    <div id="board"></div>
+  </div>
+  <div class="foot">
+    <span>// found via emblem ×5 · doors open after 00:00 local</span>
+    <a href="/">← back to the surface</a>
+  </div>
+</div>
+
+<script is:inline>
+'use strict';
+// ── state ──
+const S = {
+  cables: [], drag: null, playing: false, curStep: -1,
+  oscWave: 'sawtooth', lfoWave: 'triangle',
+  steps: [0,0,12,0,3,0,7,10].map((note,i)=>({ on: [1,1,0,1,1,0,1,0][i]===1, note })),
+};
+const NOTE = n => ['A','A#','B','C','C#','D','D#','E','F','F#','G','G#'][((n%12)+12)%12] + (Math.floor(n/12)+1);
+
+// ── build modules ──
+const board = document.getElementById('board');
+const knob = (p,l,min,max,step,val) => `<label>${l}<input type="range" data-param="${p}" min="${min}" max="${max}" step="${step}" value="${val}"></label>`;
+const jack = (id,dir,label,cls='') => `<div class="jack ${dir==='out'?'out':''} ${cls}"><i data-jack="${id}" data-dir="${dir}"></i><span>${label}</span></div>`;
+const waves = tgt => `<div class="waves" data-tgt="${tgt}">` + [['sine','sin'],['triangle','tri'],['sawtooth','saw'],['square','sqr']].map(([w,l])=>`<div data-wave="${w}">${l}</div>`).join('') + `</div>`;
+const mod = (des,nm,body) => `<div class="mod"><div class="hd"><span class="des">${des}</span><span class="nm">${nm}</span></div>${body}</div>`;
+board.innerHTML =
+  mod('U1','OSC', waves('osc') + knob('tune','tune',-1200,1200,10,0) + knob('sub','sub',0,0.8,0.01,0.3) + `<div class="jacks end">${jack('osc.out','out','OUT')}</div>`) +
+  mod('U2','LFO', waves('lfo') + knob('rate','rate',0.05,12,0.05,0.4) + knob('depth','depth',0,3000,10,1200) + `<div class="jacks end">${jack('lfo.out','out','CV OUT','cvj')}</div>`) +
+  mod('U3','FILTER', knob('cutoff','cutoff',80,6000,10,900) + knob('res','resonance',0,24,0.5,12) + `<div class="jacks">${jack('filter.in','in','IN')}${jack('filter.mod','in','MOD','cvj')}${jack('filter.out','out','OUT')}</div>`) +
+  mod('U4','ENV', knob('att','attack',0.001,0.2,0.001,0.008) + knob('dec','decay',0.05,1,0.01,0.18) + knob('envamt','env → filter',0,4000,10,1500) + `<div class="note">gate ← U7 SEQ · VCA hardwired</div>`) +
+  mod('U5','DIST', knob('drive','drive',0,100,1,25) + knob('dlevel','level',0,1,0.01,0.7) + `<div class="jacks">${jack('dist.in','in','IN')}${jack('dist.out','out','OUT')}</div>`) +
+  mod('U6','FX <small>delay+verb</small>', knob('time','time',0.05,0.6,0.01,0.3) + knob('fb','feedback',0,0.85,0.01,0.45) + knob('mix','verb mix',0,1,0.01,0.35) + `<div class="jacks">${jack('fx.in','in','IN')}${jack('fx.out','out','OUT')}</div>`) +
+  mod('U7','SEQ', `<div class="stepsrow" id="steps"></div><div class="hint9">click: gate on/off · drag ↕: tune</div>` + knob('tempo','tempo',70,170,1,128) + `<div class="note">CV → U1 OSC (hardwired)</div>`) +
+  mod('U8','OUT', `<canvas id="scope" width="440" height="120"></canvas>` + knob('vol','volume',0,1,0.01,0.8) + `<div class="jacks" style="justify-content:flex-start">${jack('out.in','in','IN')}</div>`) +
+  `<svg id="cablesvg"></svg>`;
+
+// ── sequencer UI ──
+const stepsEl = document.getElementById('steps');
+stepsEl.innerHTML = S.steps.map((s,i)=>`<div class="stepcol"><div class="step" data-step="${i}"><em></em></div><span></span></div>`).join('');
+function drawSteps() {
+  stepsEl.querySelectorAll('.stepcol').forEach((col,i)=>{
+    const s = S.steps[i], st = col.querySelector('.step');
+    st.classList.toggle('on', s.on); col.classList.toggle('on', s.on);
+    st.classList.toggle('cur', i===S.curStep && S.playing);
+    st.querySelector('em').style.height = (18 + (s.note+12)/36*82) + '%';
+    col.querySelector('span').textContent = NOTE(s.note);
+  });
+}
+drawSteps();
+stepsEl.addEventListener('pointerdown', e => {
+  const st = e.target.closest('.step'); if (!st) return;
+  e.preventDefault();
+  st.setPointerCapture(e.pointerId);
+  const i = +st.dataset.step, y0 = e.clientY, note0 = S.steps[i].note, pid = e.pointerId;
+  let moved = false;
+  const mv = ev => { if (ev.pointerId !== pid) return;
+    const dn = Math.round((y0-ev.clientY)/6); if (dn) moved = true;
+    S.steps[i].note = Math.max(-12, Math.min(24, note0+dn)); drawSteps(); };
+  const up = ev => { if (ev.pointerId !== pid) return;
+    document.removeEventListener('pointermove',mv); document.removeEventListener('pointerup',up);
+    if (!moved) { S.steps[i].on = !S.steps[i].on; drawSteps(); } };
+  document.addEventListener('pointermove',mv); document.addEventListener('pointerup',up);
+});
+
+// ── wave selectors ──
+const waveSyncs = [];
+document.querySelectorAll('.waves').forEach(g => {
+  const tgt = g.dataset.tgt;
+  const sync = () => g.querySelectorAll('div').forEach(d => d.classList.toggle('sel', d.dataset.wave === (tgt==='osc'?S.oscWave:S.lfoWave)));
+  sync(); waveSyncs.push(sync);
+  g.addEventListener('click', e => {
+    const w = e.target.dataset.wave; if (!w) return;
+    if (tgt==='osc') { S.oscWave = w; if (A.osc) A.osc.type = w; } else { S.lfoWave = w; if (A.lfo) A.lfo.type = w; }
+    sync();
+  });
+});
+
+// ── audio engine ──
+const A = {}; let tempo = 128;
+function initAudio() {
+  const ctx = new (window.AudioContext||window.webkitAudioContext)(); A.ctx = ctx;
+  const g = v => { const n = ctx.createGain(); n.gain.value = v; return n; };
+  A.cutoff = 900; A.envA = 0.008; A.envD = 0.18; A.envAmt = 1500;
+  A.osc = ctx.createOscillator(); A.osc.type = S.oscWave; A.osc.frequency.value = 110;
+  A.sub = ctx.createOscillator(); A.sub.type = 'square'; A.sub.frequency.value = 55;
+  A.subGain = g(0.3); A.vca = g(0);
+  A.osc.connect(A.vca); A.sub.connect(A.subGain); A.subGain.connect(A.vca); A.osc.start(); A.sub.start();
+  A.fIn = g(1); A.biq = ctx.createBiquadFilter(); A.biq.type='lowpass'; A.biq.frequency.value=900; A.biq.Q.value=12;
+  A.fOut = g(1); A.fIn.connect(A.biq); A.biq.connect(A.fOut);
+  A.dIn = g(1); A.shaper = ctx.createWaveShaper(); setDrive(25); A.dOut = g(0.7);
+  A.dIn.connect(A.shaper); A.shaper.connect(A.dOut);
+  A.dlIn = g(1); A.dl = ctx.createDelay(1); A.dl.delayTime.value = 0.3; A.fb = g(0.45); A.dlOut = g(1);
+  A.dlIn.connect(A.dlOut); A.dlIn.connect(A.dl); A.dl.connect(A.dlOut); A.dl.connect(A.fb); A.fb.connect(A.dl);
+  A.rvIn = g(1); A.conv = ctx.createConvolver(); A.conv.buffer = impulse(ctx, 2.2);
+  A.wet = g(0.35); A.dry = g(1); A.rvOut = g(1);
+  A.rvIn.connect(A.dry); A.dry.connect(A.rvOut); A.rvIn.connect(A.conv); A.conv.connect(A.wet); A.wet.connect(A.rvOut);
+  A.dlOut.connect(A.rvIn);
+  A.lfo = ctx.createOscillator(); A.lfo.type = S.lfoWave; A.lfo.frequency.value = 0.4;
+  A.lfoDepth = g(1200); A.lfo.connect(A.lfoDepth); A.lfo.start();
+  A.mIn = g(0.8); A.an = ctx.createAnalyser(); A.an.fftSize = 2048; A.comp = ctx.createDynamicsCompressor();
+  A.mIn.connect(A.comp); A.comp.connect(A.an); A.an.connect(ctx.destination);
+  A.nodes = { 'osc.out':A.vca, 'filter.in':A.fIn, 'filter.out':A.fOut, 'filter.mod':A.biq.frequency,
+    'dist.in':A.dIn, 'dist.out':A.dOut, 'fx.in':A.dlIn, 'fx.out':A.rvOut, 'lfo.out':A.lfoDepth, 'out.in':A.mIn };
+  S.cables.forEach(c => wire(c, true));
+}
+function impulse(ctx, secs) {
+  const len = ctx.sampleRate*secs, buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let ch=0; ch<2; ch++){ const d = buf.getChannelData(ch);
+    for (let i=0;i<len;i++) d[i] = (Math.random()*2-1)*Math.pow(1-i/len,2.6); }
+  return buf;
+}
+function setDrive(v) {
+  const k=v/8, n=512, c=new Float32Array(n);
+  for (let i=0;i<n;i++){ const x=(i/(n-1))*2-1; c[i]=k>0?Math.tanh(x*(1+k)):x; }
+  A.shaper.curve = c;
+}
+function wire(c, on) {
+  if (!A.nodes) return;
+  const a = A.nodes[c.from], z = A.nodes[c.to]; if (!a||!z) return;
+  try { on ? a.connect(z) : a.disconnect(z); } catch(e){}
+}
+
+// ── scheduler ──
+let timer, step = 0, nextTime = 0;
+function schedule() {
+  const spb = 60/tempo/4;
+  while (nextTime < A.ctx.currentTime + 0.12) {
+    const i = step%8, t = nextTime, st = S.steps[i];
+    if (st.on) {
+      const f = 110*Math.pow(2, st.note/12), a = A.envA, dcy = A.envD;
+      A.osc.frequency.setValueAtTime(f, t); A.sub.frequency.setValueAtTime(f/2, t);
+      A.vca.gain.cancelScheduledValues(t); A.vca.gain.setValueAtTime(0.0001, t);
+      A.vca.gain.exponentialRampToValueAtTime(0.5, t+a);
+      A.vca.gain.exponentialRampToValueAtTime(0.0001, t+a+dcy);
+      if (A.envAmt > 0) {
+        A.biq.frequency.cancelScheduledValues(t);
+        A.biq.frequency.setValueAtTime(Math.min(12000, A.cutoff+A.envAmt), t+a);
+        A.biq.frequency.exponentialRampToValueAtTime(Math.max(A.cutoff,40), t+a+dcy*0.7);
+      }
+    }
+    setTimeout(()=>{ S.curStep=i; drawSteps(); }, Math.max(0,(t-A.ctx.currentTime)*1000));
+    nextTime += spb; step++;
+  }
+}
+
+// ── scope ──
+function drawScope() {
+  const cv = document.getElementById('scope');
+  if (A.an) {
+    const x = cv.getContext('2d'), n = A.an.fftSize, data = new Uint8Array(n);
+    A.an.getByteTimeDomainData(data);
+    x.fillStyle = '#08080F'; x.fillRect(0,0,cv.width,cv.height);
+    x.strokeStyle = '#00D4FF'; x.lineWidth = 2; x.beginPath();
+    for (let i=0;i<n;i++){ const px=i/n*cv.width, py=data[i]/255*cv.height; i?x.lineTo(px,py):x.moveTo(px,py); }
+    x.stroke();
+  }
+  requestAnimationFrame(drawScope);
+}
+
+// ── power ──
+document.getElementById('power').addEventListener('click', function() {
+  if (!A.ctx) { initAudio(); drawScope(); }
+  if (S.playing) {
+    clearInterval(timer);
+    A.vca.gain.cancelScheduledValues(A.ctx.currentTime);
+    A.vca.gain.setTargetAtTime(0, A.ctx.currentTime, 0.05);
+    S.playing = false; S.curStep = -1; this.textContent = '▶ POWER'; this.classList.remove('on');
+  } else {
+    A.ctx.resume(); step = 0; nextTime = A.ctx.currentTime + 0.06;
+    timer = setInterval(schedule, 25);
+    S.playing = true; this.textContent = '■ STOP'; this.classList.add('on');
+  }
+  drawSteps();
+});
+
+// ── knobs ──
+function applyParam(p, v) {
+  if (p==='tempo') { tempo = v; return; }
+  if (!A.ctx) return;
+  ({ tune:()=>A.osc.detune.value=v, sub:()=>A.subGain.gain.value=v,
+     cutoff:()=>{A.cutoff=v; A.biq.frequency.value=v;}, res:()=>A.biq.Q.value=v,
+     att:()=>A.envA=v, dec:()=>A.envD=v, envamt:()=>A.envAmt=v,
+     drive:()=>setDrive(v), dlevel:()=>A.dOut.gain.value=v,
+     time:()=>A.dl.delayTime.setTargetAtTime(v, A.ctx.currentTime, 0.02),
+     fb:()=>A.fb.gain.value=v, mix:()=>A.wet.gain.value=v,
+     rate:()=>A.lfo.frequency.value=v, depth:()=>A.lfoDepth.gain.value=v,
+     vol:()=>A.mIn.gain.value=v })[p]();
+}
+board.addEventListener('input', e => {
+  const p = e.target.dataset.param;
+  if (p) applyParam(p, +e.target.value);
+});
+
+// ── INIT: reset to a basic sine patch ──
+document.getElementById('init').addEventListener('click', () => {
+  const defs = { tune:0, sub:0, cutoff:3000, res:2, att:0.005, dec:0.3, envamt:0,
+    drive:0, dlevel:0.7, time:0.3, fb:0.3, mix:0.2, rate:2, depth:0, tempo:120, vol:0.8 };
+  board.querySelectorAll('input[data-param]').forEach(inp => {
+    const p = inp.dataset.param;
+    if (defs[p] !== undefined) { inp.value = defs[p]; applyParam(p, defs[p]); }
+  });
+  S.cables.forEach(c => wire(c, false));
+  S.cables = [{from:'osc.out',to:'filter.in'}, {from:'filter.out',to:'out.in'}];
+  S.cables.forEach(c => wire(c, true));
+  S.oscWave = 'sine'; S.lfoWave = 'sine';
+  if (A.ctx) { A.osc.type = 'sine'; A.lfo.type = 'sine'; }
+  S.steps = Array.from({length:8}, () => ({ on:true, note:0 }));
+  waveSyncs.forEach(f => f()); drawSteps(); drawCables();
+});
+
+// ── cables ──
+const svg = document.getElementById('cablesvg');
+const jackEl = id => board.querySelector(`[data-jack="${id}"]`);
+function center(el) {
+  const b = board.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return [r.left-b.left+r.width/2, r.top-b.top+r.height/2];
+}
+function cableD(c) {
+  const a = jackEl(c.from), z = jackEl(c.to); if (!a||!z) return '';
+  const [x1,y1] = center(a), [x2,y2] = center(z);
+  const sag = 36 + Math.abs(x2-x1)*0.08;
+  return `M ${x1} ${y1} C ${x1} ${y1+sag}, ${x2} ${y2+sag}, ${x2} ${y2}`;
+}
+function drawCables(dragPath) {
+  svg.innerHTML = S.cables.map((c,i) =>
+    `<path class="cable" data-idx="${i}" d="${cableD(c)}" stroke="${c.to==='filter.mod'||c.from==='lfo.out'?'#00D4FF':'#C19A6B'}" stroke-width="3" fill="none" opacity="0.85" stroke-linecap="round"/>`
+  ).join('') + (dragPath ? `<path d="${dragPath}" stroke="#E3C089" stroke-width="2.5" stroke-dasharray="6 6" fill="none" opacity="0.9"/>` : '');
+}
+svg.addEventListener('click', e => {
+  const p = e.target.closest('.cable'); if (!p) return;
+  const c = S.cables[+p.dataset.idx];
+  wire(c, false); S.cables.splice(+p.dataset.idx, 1); drawCables();
+});
+board.addEventListener('pointerdown', e => {
+  const j = e.target.dataset; if (!j || !j.jack) return;
+  e.preventDefault();
+  // Capture the pointer so pointermove/pointerup keep firing even if the
+  // pointer leaves the jack (essential for touch drags across the board).
+  try { e.target.setPointerCapture(e.pointerId); } catch(_){}
+  if (j.dir === 'in') {
+    const i = S.cables.map(c=>c.to).lastIndexOf(j.jack);
+    if (i >= 0) { const c = S.cables[i]; wire(c, false); S.cables.splice(i,1);
+      S.drag = { from: c.from, dir: 'out', pid: e.pointerId }; drawCables(); return; }
+  }
+  S.drag = { from: j.jack, dir: j.dir, pid: e.pointerId };
+});
+document.addEventListener('pointermove', e => {
+  if (!S.drag || (S.drag.pid != null && e.pointerId !== S.drag.pid)) return;
+  const b = board.getBoundingClientRect(), x = e.clientX-b.left, y = e.clientY-b.top;
+  const [x1,y1] = center(jackEl(S.drag.from));
+  drawCables(`M ${x1} ${y1} C ${x1} ${y1+30}, ${x} ${y+30}, ${x} ${y}`);
+});
+document.addEventListener('pointerup', e => {
+  if (!S.drag || (S.drag.pid != null && e.pointerId !== S.drag.pid)) return;
+  // On touch, elementFromPoint gives us what's under the finger at release
+  // (dataset.jack on target isn't reliable when pointer was captured).
+  const overEl = document.elementFromPoint(e.clientX, e.clientY);
+  const t = overEl && overEl.dataset && overEl.dataset.jack ? overEl.dataset : null;
+  if (t && t.dir !== S.drag.dir) {
+    const from = S.drag.dir==='out' ? S.drag.from : t.jack;
+    const to = S.drag.dir==='out' ? t.jack : S.drag.from;
+    if (!S.cables.some(c=>c.from===from && c.to===to)) { const c={from,to}; wire(c,true); S.cables.push(c); }
+  }
+  S.drag = null; drawCables();
+});
+window.addEventListener('resize', () => drawCables());
+
+// default patch
+S.cables = [
+  {from:'osc.out',to:'filter.in'}, {from:'filter.out',to:'dist.in'},
+  {from:'dist.out',to:'fx.in'}, {from:'fx.out',to:'out.in'}, {from:'lfo.out',to:'filter.mod'},
+];
+requestAnimationFrame(() => drawCables());
+
+// ── landscape hint: dismissable on portrait-mobile, session-persistent ──
+(function landscape() {
+  const hint = document.querySelector('.landscape-hint');
+  if (!hint) return;
+  if (sessionStorage.getItem('midnight-landscape-dismissed') === '1') {
+    hint.classList.add('dismissed');
+  }
+  hint.querySelector('button').addEventListener('click', () => {
+    hint.classList.add('dismissed');
+    try { sessionStorage.setItem('midnight-landscape-dismissed', '1'); } catch(_){}
+  });
+})();
+</script>
+</body>
+</html>
