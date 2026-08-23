@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const OUT = resolve(__dirname, "..", ".verify");
 await mkdir(OUT, { recursive: true });
 
-const base = "http://localhost:4321";
+const base = process.env.URL || "http://localhost:4321";
 const browser = await chromium.launch();
 
 // Portrait iPhone-ish
