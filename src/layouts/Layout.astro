@@ -32,8 +32,13 @@ const canonical = SITE_ORIGIN + Astro.url.pathname;
     <meta name="theme-color" content="#08080F" />
 
     <link rel="canonical" href={canonical} />
-    <link rel="icon" type="image/png" href="/favicon.png" />
+    {/* Favicons — modern browsers pick the SVG (sharp at any DPI), older
+        browsers and RSS readers fall back to the 32x32 PNG. */}
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
 
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
