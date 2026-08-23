@@ -18,8 +18,9 @@
     z-index: 0;
     color: var(--cyan);
     opacity: 0.55;
-    /* Fade left→right so the left column (emblem + wordmark + copy) reads
-       cleanly while the right side dissolves into the traces. */
+    /* Desktop: two-column layout separates text (left) from the busiest
+       area of the board — mask fades left→right, text sits in the calm
+       zone, circuit strong on the right. */
     mask-image: linear-gradient(90deg,
       rgba(0,0,0,0.35) 0%,
       rgba(0,0,0,0.65) 35%,
@@ -30,6 +31,26 @@
       rgba(0,0,0,0.65) 35%,
       black 65%,
       black 100%);
+  }
+  @media (max-width: 900px) {
+    .circuit-bg {
+      /* Mobile: text stacks under the emblem, so a left→right fade
+         doesn't help — we need a vertical fade instead. Strong at the
+         top around the emblem/wordmark, calm before the identity text
+         starts. Also drop opacity a touch since the board covers more
+         of the reading area proportionally. */
+      opacity: 0.35;
+      mask-image: linear-gradient(180deg,
+        black 0%,
+        black 28%,
+        rgba(0,0,0,0.4) 55%,
+        transparent 85%);
+      -webkit-mask-image: linear-gradient(180deg,
+        black 0%,
+        black 28%,
+        rgba(0,0,0,0.4) 55%,
+        transparent 85%);
+    }
   }
 </style>
 
