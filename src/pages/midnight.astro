@@ -354,9 +354,13 @@ document.getElementById('init').addEventListener('click', () => {
 // ── cables ──
 const svg = document.getElementById('cablesvg');
 const jackEl = id => board.querySelector(`[data-jack="${id}"]`);
+// Coordinates are in the SVG's own userspace. The SVG is position:absolute
+// inset:0, so its rect matches the board's padding box — using the SVG's
+// own rect (not the board's border-box) keeps cable endpoints locked to
+// the jack circles regardless of border/padding on #board.
 function center(el) {
-  const b = board.getBoundingClientRect(), r = el.getBoundingClientRect();
-  return [r.left-b.left+r.width/2, r.top-b.top+r.height/2];
+  const s = svg.getBoundingClientRect(), r = el.getBoundingClientRect();
+  return [r.left-s.left+r.width/2, r.top-s.top+r.height/2];
 }
 function cableD(c) {
   const a = jackEl(c.from), z = jackEl(c.to); if (!a||!z) return '';
@@ -389,7 +393,7 @@ board.addEventListener('pointerdown', e => {
 });
 document.addEventListener('pointermove', e => {
   if (!S.drag || (S.drag.pid != null && e.pointerId !== S.drag.pid)) return;
-  const b = board.getBoundingClientRect(), x = e.clientX-b.left, y = e.clientY-b.top;
+  const s = svg.getBoundingClientRect(), x = e.clientX-s.left, y = e.clientY-s.top;
   const [x1,y1] = center(jackEl(S.drag.from));
   drawCables(`M ${x1} ${y1} C ${x1} ${y1+30}, ${x} ${y+30}, ${x} ${y}`);
 });
