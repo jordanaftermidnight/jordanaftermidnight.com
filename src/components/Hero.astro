@@ -29,7 +29,7 @@ import CircuitBackground from "./CircuitBackground.astro";
         </div>
       </div>
       <p class="identity">
-        Hacker, designer, musician by night. Compliance engineer by day.<br />
+        Compliance expert by day. Hacker, designer, musician by night.<br />
         <span class="soft">Fluent in code. Not bound by it.</span>
       </p>
     </div>
@@ -58,21 +58,28 @@ import CircuitBackground from "./CircuitBackground.astro";
     border-bottom: 1px solid var(--line);
     /* Contain the absolute-positioned CircuitBackground */
     isolation: isolate;
+    /* Full-viewport-width band — the circuit board bleeds off both edges,
+       not just the right, so the "extends beyond" illusion is symmetric. */
+    padding-block: 48px;
   }
   .hero-inner {
     position: relative;
     z-index: 1;
+    /* Content is centered + padded to match main's content area */
+    max-width: 1080px;
+    margin: 0 auto;
+    padding-inline: 40px;
     display: grid;
     grid-template-columns: 1fr 220px;
     gap: 40px;
     align-items: start;
-    padding: 48px 0;
   }
   @media (max-width: 900px) {
+    .hero { padding-block: 36px; }
     .hero-inner {
       grid-template-columns: 1fr;
       gap: 28px;
-      padding: 36px 0;
+      padding-inline: 20px;
     }
   }
 
