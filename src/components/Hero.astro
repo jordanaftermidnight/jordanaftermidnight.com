@@ -149,7 +149,16 @@ import CircuitBackground from "./CircuitBackground.astro";
            clip-path: none; }
   }
 
-  .mark { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .mark {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+    /* Shrink to the wordmark's natural width so the osc line beneath
+       ends where the text ends, not wider than it. */
+    width: fit-content;
+    max-width: 100%;
+  }
   .wordmark {
     font-family: var(--font-mono);
     font-weight: 700;
@@ -163,8 +172,8 @@ import CircuitBackground from "./CircuitBackground.astro";
   }
   .osc {
     display: block;
+    /* Fills .mark, which is fit-content = wordmark width */
     width: 100%;
-    max-width: 420px;
     height: 26px;
   }
 
@@ -251,7 +260,9 @@ import CircuitBackground from "./CircuitBackground.astro";
 </style>
 
 <script>
-  // ── oscilloscope band, tapered edges, mouse-x frequency ──
+  // ── oscilloscope band: tapered edges, mouse-x freq, slow underlying
+  //    drift so it feels alive at rest, and couples to the emblem's
+  //    proximity glitch — cursor near emblem ⇒ wave amplifies briefly. ──
   (function osc() {
     const c = document.getElementById("hero-osc") as HTMLCanvasElement | null;
     if (!c) return;
@@ -275,6 +286,19 @@ import CircuitBackground from "./CircuitBackground.astro";
       mouseX = e.clientX / window.innerWidth;
     });
 
+    // Amplitude eases toward `targetAmp`. Cursor near emblem ⇒ target rises.
+    const emblem = document.getElementById("hero-emblem");
+    const BASE_AMP = 0.30;
+    const HOT_AMP = 0.55;
+    let currentAmp = BASE_AMP;
+    let targetAmp = BASE_AMP;
+    if (emblem && !reduce) {
+      const mo = new MutationObserver(() => {
+        targetAmp = emblem.classList.contains("is-hot") ? HOT_AMP : BASE_AMP;
+      });
+      mo.observe(emblem, { attributes: true, attributeFilter: ["class"] });
+    }
+
     function draw(now: number) {
       if (!c || !ctx) return;
       const w = c.getBoundingClientRect().width;
@@ -289,9 +313,15 @@ import CircuitBackground from "./CircuitBackground.astro";
       grad.addColorStop(0.90, "rgba(0, 212, 255, 0.2)");
       grad.addColorStop(1.00, "rgba(0, 212, 255, 0)");
 
+      // Ease amplitude toward the current target (smooth couples to emblem hot state)
+      currentAmp += (targetAmp - currentAmp) * 0.06;
+
+      // Slow drift so the wave breathes even without user input
+      const drift = Math.sin(now * 0.00028) * 0.35;
+
       const cy = h / 2;
-      const amp = h * 0.32;
-      const freq1 = 2 + mouseX * 2;
+      const amp = h * currentAmp;
+      const freq1 = 2 + mouseX * 2 + drift;
       const t = now * 0.001;
 
       ctx.strokeStyle = grad;
