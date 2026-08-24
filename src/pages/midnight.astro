@@ -73,65 +73,29 @@
   #cablesvg path.cable { pointer-events: stroke; cursor: pointer; }
   .foot { display: flex; justify-content: space-between; margin-top: 16px; font-size: 11px; color: var(--dust); }
 
-  /* ─── mobile: horizontal-scroll board + landscape hint ─────────── */
-  /* Wraps #board on all screens; only enables scroll on narrow viewports */
-  .board-wrap { position: relative; overflow: visible; }
+  /* ─── mobile: repack to 2 columns so modules stay at natural size ── */
+  /* Cables rewire automatically because they follow jack positions.
+     The default patch reads top-to-bottom in the 2×4 layout, which is
+     legible on portrait phones without any scaling or scroll. */
   @media (max-width: 900px) {
-    .board-wrap {
-      overflow-x: auto;
-      overflow-y: visible;
-      -webkit-overflow-scrolling: touch;
-      /* Extend flush to viewport edges so the scroll feels intentional */
-      margin-inline: -24px;
-      padding-inline: 24px;
-      padding-bottom: 8px;
-    }
-    #board {
-      /* Keep the 4-col layout; force wider than viewport so scroll engages */
-      min-width: 880px;
-      grid-template-columns: repeat(4, 1fr);
-      /* Board can pan horizontally; cable drags on jacks override this */
-      touch-action: pan-x;
-    }
+    #board { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
     /* Jacks own their pointer events — no page scroll while dragging cables */
     .jack i { touch-action: none; }
     /* Steps: allow vertical drag for tuning without triggering page scroll */
     .step { touch-action: none; }
   }
-
-  .landscape-hint {
-    display: none;
-    position: fixed;
-    top: 12px; left: 50%;
-    transform: translateX(-50%);
-    padding: 8px 14px;
-    background: rgba(13, 16, 25, 0.95);
-    border: 1px solid var(--line-cyan);
-    border-radius: 4px;
-    color: var(--cyan);
-    font-size: 11px;
-    letter-spacing: 0.05em;
-    z-index: 100;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-  .landscape-hint button {
-    background: none; border: none; color: var(--dust);
-    cursor: pointer; padding: 0 4px; margin-left: 8px;
-    font: inherit;
-  }
-  .landscape-hint button:hover { color: var(--gold-hot); }
-  @media (orientation: portrait) and (max-width: 900px) {
-    .landscape-hint:not(.dismissed) { display: block; }
+  @media (max-width: 640px) {
+    .wrap { padding: 28px 16px 40px; }
+    .head { flex-wrap: wrap; gap: 14px; }
+    .head h1 { font-size: 20px; }
+    .head h1, .sub { max-width: 100%; }
+    .foot { flex-direction: column; gap: 6px; }
+    #board { padding: 12px; gap: 10px; }
+    .mod { padding: 12px 10px 10px; }
   }
 </style>
 </head>
 <body>
-<div class="landscape-hint" role="status">
-  rotate to landscape for the full board
-  <button type="button" aria-label="Dismiss hint">×</button>
-</div>
-
 <div class="wrap">
   <div class="head">
     <div>
@@ -141,9 +105,7 @@
     </div>
     <div style="display:flex;gap:10px"><button id="init">INIT</button><button id="power">▶ POWER</button></div>
   </div>
-  <div class="board-wrap">
-    <div id="board"></div>
-  </div>
+  <div id="board"></div>
   <div class="foot">
     <span>// found via emblem ×5 · doors open after 00:00 local</span>
     <a href="/">← back to the surface</a>
@@ -410,27 +372,14 @@ document.addEventListener('pointerup', e => {
   }
   S.drag = null; drawCables();
 });
-window.addEventListener('resize', () => drawCables());
-
 // default patch
 S.cables = [
   {from:'osc.out',to:'filter.in'}, {from:'filter.out',to:'dist.in'},
   {from:'dist.out',to:'fx.in'}, {from:'fx.out',to:'out.in'}, {from:'lfo.out',to:'filter.mod'},
 ];
 requestAnimationFrame(() => drawCables());
-
-// ── landscape hint: dismissable on portrait-mobile, session-persistent ──
-(function landscape() {
-  const hint = document.querySelector('.landscape-hint');
-  if (!hint) return;
-  if (sessionStorage.getItem('midnight-landscape-dismissed') === '1') {
-    hint.classList.add('dismissed');
-  }
-  hint.querySelector('button').addEventListener('click', () => {
-    hint.classList.add('dismissed');
-    try { sessionStorage.setItem('midnight-landscape-dismissed', '1'); } catch(_){}
-  });
-})();
+window.addEventListener('resize', () => drawCables(), { passive: true });
+window.addEventListener('orientationchange', () => drawCables());
 </script>
 </body>
 </html>
