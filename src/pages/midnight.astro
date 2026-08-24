@@ -73,25 +73,81 @@
   #cablesvg path.cable { pointer-events: stroke; cursor: pointer; }
   .foot { display: flex; justify-content: space-between; margin-top: 16px; font-size: 11px; color: var(--dust); }
 
-  /* ─── mobile: repack to 2 columns so modules stay at natural size ── */
-  /* Cables rewire automatically because they follow jack positions.
-     The default patch reads top-to-bottom in the 2×4 layout, which is
-     legible on portrait phones without any scaling or scroll. */
+  /* Modules stretch to equal row height so panels stay uniform */
+  .mod { align-self: stretch; display: flex; flex-direction: column; }
+  .mod .nm small { white-space: nowrap; }
+
+  /* ─── portrait mobile: rotate the whole board 90° so the natural
+     4×2 landscape shape fills the portrait viewport with no scroll ─── */
+  .rot { position: relative; margin-top: 28px; }
   @media (max-width: 900px) {
-    #board { grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 16px; }
-    /* Jacks own their pointer events — no page scroll while dragging cables */
     .jack i { touch-action: none; }
-    /* Steps: allow vertical drag for tuning without triggering page scroll */
     .step { touch-action: none; }
   }
   @media (max-width: 640px) {
-    .wrap { padding: 28px 16px 40px; }
-    .head { flex-wrap: wrap; gap: 14px; }
+    .wrap { padding: 24px 16px 32px; }
+    .head { flex-wrap: wrap; gap: 12px; }
     .head h1 { font-size: 20px; }
-    .head h1, .sub { max-width: 100%; }
-    .foot { flex-direction: column; gap: 6px; }
-    #board { padding: 12px; gap: 10px; }
-    .mod { padding: 12px 10px 10px; }
+    .head > div:first-child { flex: 1 1 100%; }
+    .foot { flex-direction: column; gap: 6px; font-size: 10.5px; }
+  }
+  @media (orientation: portrait) and (max-width: 640px) {
+    /* Break .rot out of .wrap's 16px horizontal padding so we can use
+       full-viewport (100vw) math. Reserve vertical space equal to
+       whatever remains after header+footer chrome. */
+    .rot {
+      position: relative;
+      width: 100vw;
+      margin-left: -16px;
+      margin-right: -16px;
+      /* Rough chrome budget: 24 (wrap top) + ~200 (header) + ~40 (foot) + 32 (wrap bot) + 20 (rot mt) = 316px */
+      height: calc(100dvh - 316px);
+      min-height: 520px;   /* floor so cramped viewports still render usably */
+      overflow: hidden;
+      margin-top: 20px;
+    }
+    #board {
+      /* Anchor top-left of the pre-rotation box at the wrapper's top-right,
+         then rotate 90° CW around that origin. After rotation, the box
+         extends left across 100vw and down across the wrapper's height,
+         exactly filling .rot. */
+      position: absolute;
+      top: 0;
+      left: 100vw;
+      width: calc(100dvh - 316px);      /* pre-rot width → visible height */
+      min-width: 520px;                 /* matches .rot min-height */
+      height: 100vw;                    /* pre-rot height → visible width */
+      margin: 0;
+      border: none;
+      transform-origin: top left;
+      transform: rotate(90deg);
+      /* minmax(0,1fr) is critical: without it, module min-content sizes
+         override 1fr and blow the grid past its container. */
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-auto-rows: 1fr;
+      gap: 10px;
+      padding: 12px;
+    }
+    /* Tighten module internals so all 8 modules fit the tight 4-col grid */
+    .mod { padding: 10px 10px 8px; font-size: 10px; min-width: 0; overflow: hidden; }
+    .mod .hd { margin-top: 2px; }
+    .mod .nm { font-size: 11px; }
+    .mod .nm small { font-size: 9px; white-space: nowrap; }
+    .mod .des { font-size: 10px; }
+    .mod label { font-size: 9px; margin-top: 5px; }
+    .mod label:first-of-type { margin-top: 9px; }
+    .waves { gap: 3px; margin-top: 8px; }
+    .waves div { font-size: 8px; padding: 3px 0; }
+    .jacks { margin-top: 8px; }
+    .jack i { width: 14px; height: 14px; border-width: 1.5px; }
+    .jack span { font-size: 8px; }
+    #scope { height: 36px; margin-top: 8px; }
+    .stepsrow { gap: 2px; margin-top: 8px; }
+    .step { width: 12px; height: 28px; }
+    .stepcol { gap: 2px; }
+    .stepcol span { font-size: 7px; }
+    .note, .hint9 { font-size: 8px; margin-top: 6px; }
+    input[type=range] { margin-top: 2px; }
   }
 </style>
 </head>
@@ -105,7 +161,7 @@
     </div>
     <div style="display:flex;gap:10px"><button id="init">INIT</button><button id="power">▶ POWER</button></div>
   </div>
-  <div id="board"></div>
+  <div class="rot"><div id="board"></div></div>
   <div class="foot">
     <span>// found via emblem ×5 · doors open after 00:00 local</span>
     <a href="/">← back to the surface</a>
@@ -316,13 +372,18 @@ document.getElementById('init').addEventListener('click', () => {
 // ── cables ──
 const svg = document.getElementById('cablesvg');
 const jackEl = id => board.querySelector(`[data-jack="${id}"]`);
-// Coordinates are in the SVG's own userspace. The SVG is position:absolute
-// inset:0, so its rect matches the board's padding box — using the SVG's
-// own rect (not the board's border-box) keeps cable endpoints locked to
-// the jack circles regardless of border/padding on #board.
+// Convert a screen-space (client) point into the SVG's userspace using
+// the SVG's screen CTM. This is transform-agnostic: works under rotate,
+// scale, zoom, or any combination applied to the board or ancestors.
+function screenToSvg(cx, cy) {
+  const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy;
+  const m = svg.getScreenCTM();
+  return m ? pt.matrixTransform(m.inverse()) : { x: cx, y: cy };
+}
 function center(el) {
-  const s = svg.getBoundingClientRect(), r = el.getBoundingClientRect();
-  return [r.left-s.left+r.width/2, r.top-s.top+r.height/2];
+  const r = el.getBoundingClientRect();
+  const p = screenToSvg(r.left + r.width/2, r.top + r.height/2);
+  return [p.x, p.y];
 }
 function cableD(c) {
   const a = jackEl(c.from), z = jackEl(c.to); if (!a||!z) return '';
@@ -355,9 +416,9 @@ board.addEventListener('pointerdown', e => {
 });
 document.addEventListener('pointermove', e => {
   if (!S.drag || (S.drag.pid != null && e.pointerId !== S.drag.pid)) return;
-  const s = svg.getBoundingClientRect(), x = e.clientX-s.left, y = e.clientY-s.top;
+  const p = screenToSvg(e.clientX, e.clientY);
   const [x1,y1] = center(jackEl(S.drag.from));
-  drawCables(`M ${x1} ${y1} C ${x1} ${y1+30}, ${x} ${y+30}, ${x} ${y}`);
+  drawCables(`M ${x1} ${y1} C ${x1} ${y1+30}, ${p.x} ${p.y+30}, ${p.x} ${p.y}`);
 });
 document.addEventListener('pointerup', e => {
   if (!S.drag || (S.drag.pid != null && e.pointerId !== S.drag.pid)) return;
