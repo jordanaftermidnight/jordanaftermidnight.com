@@ -52,10 +52,17 @@
   .jacks { display: flex; justify-content: space-between; margin-top: 12px; }
   .jacks.end { justify-content: flex-end; }
   .jack { text-align: center; }
-  .jack i { display: block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-cyan); background: var(--ink); cursor: crosshair; margin: 0 auto; }
+  .jack i { display: block; width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--line-cyan); background: var(--ink); cursor: crosshair; margin: 0 auto; position: relative; z-index: 2; }
   .jack.out i { border-color: var(--gold); } .jack.out i:hover { border-color: var(--gold-hot); background: #1a150e; }
   .jack.cvj i { border-color: var(--cv); } .jack.cvj i:hover { border-color: var(--cyan); }
   .jack i:hover { border-color: var(--gold-hot); }
+  .jack i.armed { border-color: var(--gold-hot); background: rgba(227,192,137,0.18);
+    box-shadow: 0 0 0 3px rgba(227,192,137,0.22); }
+  .sub-touch { display: none; }
+  @media (hover: none) and (pointer: coarse) {
+    .sub-mouse { display: none; }
+    .sub-touch { display: block; }
+  }
   .jack span { font-size: 9px; color: var(--dust); margin-top: 3px; display: block; }
   .jack.cvj span { color: var(--cyan-soft); }
   .note { font-size: 9px; color: var(--cyan-soft); margin-top: 10px; }
@@ -157,7 +164,8 @@
     <div>
       <div class="crumb">jordanaftermidnight.com<b>/midnight</b></div>
       <h1>you made it past midnight.</h1>
-      <div class="sub">the board is live. drag a jack to a jack to patch — click a cable to cut it. <span class="au">gold carries audio</span>, <span class="cv">cyan carries control</span>.</div>
+      <div class="sub sub-mouse">the board is live. drag a jack to a jack to patch — click a cable to cut it. <span class="au">gold carries audio</span>, <span class="cv">cyan carries control</span>.</div>
+      <div class="sub sub-touch">the board is live. tap a jack, then tap another to patch — tap a cable to cut. <span class="au">gold carries audio</span>, <span class="cv">cyan carries control</span>.</div>
     </div>
     <div style="display:flex;gap:10px"><button id="init">INIT</button><button id="power">▶ POWER</button></div>
   </div>
@@ -172,7 +180,7 @@
 'use strict';
 // ── state ──
 const S = {
-  cables: [], drag: null, playing: false, curStep: -1,
+  cables: [], drag: null, armed: null, playing: false, curStep: -1,
   oscWave: 'sawtooth', lfoWave: 'triangle',
   steps: [0,0,12,0,3,0,7,10].map((note,i)=>({ on: [1,1,0,1,1,0,1,0][i]===1, note })),
 };
@@ -366,7 +374,9 @@ document.getElementById('init').addEventListener('click', () => {
   S.oscWave = 'sine'; S.lfoWave = 'sine';
   if (A.ctx) { A.osc.type = 'sine'; A.lfo.type = 'sine'; }
   S.steps = Array.from({length:8}, () => ({ on:true, note:0 }));
-  waveSyncs.forEach(f => f()); drawSteps(); drawCables();
+  waveSyncs.forEach(f => f()); drawSteps();
+  board.querySelectorAll('.jack i.armed').forEach(i => i.classList.remove('armed'));
+  S.armed = null; drawCables();
 });
 
 // ── cables ──
@@ -401,11 +411,51 @@ svg.addEventListener('click', e => {
   const c = S.cables[+p.dataset.idx];
   wire(c, false); S.cables.splice(+p.dataset.idx, 1); drawCables();
 });
+// Touch devices get a tap-source-then-tap-target flow — dragging on a
+// small viewport fights the browser's pan gesture and demands finger
+// precision the jack size can't guarantee.
+const isTouch = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
+function tapArm(el, jackId, dir) {
+  S.armed = { from: jackId, dir };
+  el.classList.add('armed');
+}
+function tapDisarm() {
+  if (!S.armed) return;
+  const el = jackEl(S.armed.from); if (el) el.classList.remove('armed');
+  S.armed = null;
+}
+function tapPatch(el, j) {
+  const jackId = j.jack, dir = j.dir;
+  if (!S.armed) {
+    // First tap on an occupied 'in' unroutes it and arms the source 'out'.
+    if (dir === 'in') {
+      const i = S.cables.map(c=>c.to).lastIndexOf(jackId);
+      if (i >= 0) {
+        const c = S.cables[i]; wire(c, false); S.cables.splice(i,1);
+        const srcEl = jackEl(c.from);
+        if (srcEl) tapArm(srcEl, c.from, 'out');
+        drawCables(); return;
+      }
+    }
+    tapArm(el, jackId, dir); return;
+  }
+  if (S.armed.from === jackId) { tapDisarm(); return; }         // same jack → cancel
+  if (S.armed.dir === dir)     { tapDisarm(); tapArm(el, jackId, dir); return; }  // same dir → re-arm
+  const from = S.armed.dir === 'out' ? S.armed.from : jackId;
+  const to   = S.armed.dir === 'out' ? jackId       : S.armed.from;
+  if (!S.cables.some(c => c.from===from && c.to===to)) {
+    const c = { from, to }; wire(c, true); S.cables.push(c);
+  }
+  tapDisarm(); drawCables();
+}
+
 board.addEventListener('pointerdown', e => {
   const j = e.target.dataset; if (!j || !j.jack) return;
   e.preventDefault();
+  if (isTouch) { tapPatch(e.target, j); return; }
   // Capture the pointer so pointermove/pointerup keep firing even if the
-  // pointer leaves the jack (essential for touch drags across the board).
+  // pointer leaves the jack (essential for drags across the board).
   try { e.target.setPointerCapture(e.pointerId); } catch(_){}
   if (j.dir === 'in') {
     const i = S.cables.map(c=>c.to).lastIndexOf(j.jack);
