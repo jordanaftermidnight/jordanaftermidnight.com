@@ -31,6 +31,10 @@ body{margin:0;background:var(--bg);color:var(--text);font:17px/1.65 system-ui,-a
 body>*{max-width:44rem;margin-left:auto;margin-right:auto}
 a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent}
 a:hover{color:var(--gold);border-bottom-color:var(--gold)}
+#title-block-header .hero{display:flex;gap:2rem;align-items:center;flex-wrap:wrap}
+#title-block-header img.hero-img{width:220px;height:220px;margin:0;border:1px solid var(--line);image-rendering:pixelated;background:#000;flex:none}
+#title-block-header .hero-text{flex:1;min-width:15rem}
+#title-block-header .lead{color:var(--dim);margin:1.2rem 0 0;font-size:.95rem}
 #title-block-header{padding:2.5rem 0 1.5rem;border-bottom:1px solid var(--line);margin-bottom:2rem}
 #title-block-header h1.title{font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.05;letter-spacing:-.02em;margin:0;border:0;padding:0}
 #title-block-header h1.title::before{display:none}
@@ -89,10 +93,10 @@ strong{color:#000}
 </style>
 </head>
 <body>
-<header id="title-block-header">
+<header id="title-block-header"><div class="hero"><img class="hero-img" alt="The BALSAS VCO splash screen" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAhgAAAIYCAAAAAAK78rMAAAI0ElEQVR4nO3dW3LiRgBAUZTKYrL/1WQ3SuXDKRW5Aj1B4HN+kvGIlrBvtXokDMNfN/i/P+JrIAyaGYMkDJIwSMIgCYMkDJIwSMIgCYP05/QPf/c2/BLT+2ZmDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMLg+ftjLDWu3H44aMxhwWOX7OuVz3Hc8dgzjmcpMwZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhcNy9kj3X+Ycd9zjOuCdyxvjjm74/RzJjkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgbn/F7Ju95j6gxzv9Pxrud1xvEsZcYgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDK73Hlx7xjnbcLHn9er3KDNjkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgbXfg+uo4wnv8/VK5/XO4/HjEESBkkYJGGQhIEwWM6MQRIGSRgkYZCEwXH3So66Jr92nD3vc7Vn/E9/XluYMUjCIAmDJAySMEjCIAmDJAySMEjCIAmDJAySMEjCIAmDJAySMEjCIAmDc94f45XWfq7oku3P+MzT2wVfw7mWGYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIw+Px7JVe75zIeNM4VmTFIwiAJgyQMkjBIwiAJgyQMkjBIwiAJg/Qr75WsNdx+HzMGSRgkYZCEQRIGSRgkYZCEQRIGSRgIg+XMGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgaf/x5cSz4r5IzPBBlPGPPqzBgkYZCEQRIGSRgkYZCEQRIGSRgkYZCEweffK7kddH9k7rFLtj9jnCsyY5CEQRIGSRgkYZCEQRIGSRgkYZCEQRIG33Wv5Kh7EEfdvxhu38WMQRIGSRgkYZCEQRIGSRgkYZCEQRIGSRgIg+XMGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkITB9/7u6iNr3gO03qtzOHD8T2LGIAmDJAx+3xpjjPf7frQOWLPtlvE/iRmDJAySMPjeNcaSc/2SzxN59Phn1oz/CcwYJGGQhMH3rjGWrhmWrgOGleuMteN/AjMGSRgkYfA71xhb718MG++XfAszBkkYJGHwvWuM6Xrg/pz/6Pw/3m0zrtz+9qXri3+ZMUjCIAmD711j3B6sL9b83sfZ238SMwZJGCRh8N1rjLlz/PDG7T+ZGYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMIgCYMkDJIwSMJAGCxnxiAJgyQMkjBIwiAJgyQMkjBIwiAJgyQMkjBIwiAJgyQMkjBIwiAJgyQMkjBIwiAJg31hjHeWPo7PcP8zNWOQhEESBtvfS7w+O+xbP2/0Nxrja2YMkjBIwmBbGD//vh2G4b8lxc//u57x2abXpKY/33+ZMUjCIAmD9dcx6rPM5z5zlH0efa/fsT8zBkkYJGGw7V7Js3Oeeyb7jRdcz5gxSMIgCYN1a4wl572faxlnrzPmjuWbXg8yvGitsfR6iRmDJAySMFh/HWO4wLlx7pw4Pvi7TzK+YV9Lvl9mDJIwSMJg+Rpjy3nvjGsZz14P8rPNEft+x3plfOE+1+7LjEESBkkYrLuOsea8d+a1jOEF+37Ha1fHF60vps9tzb7MGCRhkITBsjXGnvPtkdcyxhfve8laZXzw2CuvL7bsx4yBMFjOjMHy6xhbzkl7rydMz4drz417Xns67rwWMK483lesL7Zeu5gyY5CEQRIGz9cYR9wzOOpaxtoxtqwzlpzvxyfb3L8u5P7r9+M8299W9z+7vfswY5CEQRIGz9cYe89LW69ljAetc7asM/asL6am29yvN2qbK64rpswYJGGQhMH2zyt5xbWMLfdIHo3z7BiWvvZi2HgMZzlzXTFlxiAJgyQMXrPGWHst44zf6Xi0zlhyz2J88vfvcPa9lntmDJIwSMLgddcxbhvvVwwnrTPm9rfkmK7gHWseMwZJGCRh8Lo1xlH3K444jrXGX3ztYsqMQRIGSRi89jrGs3smV7wfcbvQMY1vPhYzBkkYJGHw2jXGj0evibjCuXzqKsczXuB4zBgkYZCEwevXGPeviTjqd0e+2XiR748ZgyQMkjB4z3WMeo+qd58/r2549wGYMZjjVEISBu9ZY1zpvHl1w+06zBgkYZCEQRIGSRgkYZCEQRIGSRgkYZCEQRIGSRgkYSAMljNjkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGKQ/bxuMt9tt2PLAk8e6H/d2N/ZZ+7qt2MfSYzhiuz3P14xBEgZJGBy3xjj7PL3X9Nz6inXF1HDiOONJ+ypmDJIwSMLgmDXG3PWBH/fn9mfb3w4aZ+58Ox1nOt7W/Y6TP9+PVcd4P/5txfN6dA3mfsy549y6xjJjkIRBEgbHrDGm58W5c19dQ5ieU5esE56NM7f93Lm19r3l+O/Hqq9PPXq+z8ZfqsaZe75LmTFIwiAJg+PulSx1f45/Zu68+uj1BrXt2nPrkv0Ot+OtGfPRuuOMYzNjkIRBEgb71hhnv67h2b2Avds/evzVX1/y46jnu4QZgyQMkjDYt8aYe+3A/b+vh43/Hl97f2Dt9vePmbsvsWe9MR5w32NunNuG45z7mS1hxiAJgyQM9t8refa6yiXb7h1nyf2Ltftec/zDzH/f9bwejfNorGfMGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBEgZJGCRhkIRBGv7qr/PLmTFIwiAJgyQMkjBIwiAJgyQMkjBIwiAJg1v5B4ImPBiSDaLkAAAAAElFTkSuQmCC"><div class="hero-text">
 <h1 class="title">BALSAS VCO guide</h1>
 <p class="subtitle">Version 0.3.0</p>
-</header>
+<p class="lead">An oscillator voice for Eurorack, as open-source firmware for the AMYboard. The HTML version of this guide plays the audio examples in the page. The PDF version has the same text and pictures without sound.</p></div></div></header>
 <nav id="TOC" role="doc-toc">
 <ul>
 <li><a href="#balsas-in-one-page" id="toc-balsas-in-one-page">BALSAS in
@@ -171,8 +175,6 @@ test</a></li>
 sheet</a></li>
 </ul>
 </nav>
-<p>The HTML version of this guide plays the audio examples in the page.
-The PDF version has the same text and pictures without sound.</p>
 <h1 id="balsas-in-one-page">BALSAS in one page</h1>
 <p>BALSAS is open-source firmware that turns an AMYboard v1.5 into an
 oscillator voice for Eurorack. It replaces the board&#39;s stock firmware.
